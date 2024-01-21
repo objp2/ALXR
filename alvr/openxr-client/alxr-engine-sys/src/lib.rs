@@ -14,8 +14,6 @@ impl From<&str> for crate::ALXRGraphicsApi {
             "Vulkan" => crate::ALXRGraphicsApi::Vulkan,
             "D3D12" => crate::ALXRGraphicsApi::D3D12,
             "D3D11" => crate::ALXRGraphicsApi::D3D11,
-            "OpenGLES" => crate::ALXRGraphicsApi::OpenGLES,
-            "OpenGL" => crate::ALXRGraphicsApi::OpenGL,
             _ => crate::ALXRGraphicsApi::Auto,
         }
     }
