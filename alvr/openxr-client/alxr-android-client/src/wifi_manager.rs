@@ -43,7 +43,7 @@ pub fn acquire_wifi_lock() {
     let mut maybe_wifi_lock = WIFI_LOCK.lock();
 
     if maybe_wifi_lock.is_none() {
-        println!("ALXR: Aquring Wifi Lock");
+        log::info!("ALXR: Aquring Wifi Lock");
         let vm_ptr = ndk_context::android_context().vm();
         let vm = unsafe { jni::JavaVM::from_raw(vm_ptr.cast()).unwrap() };
         let mut env = vm.attach_current_thread().unwrap();
@@ -71,13 +71,13 @@ pub fn acquire_wifi_lock() {
 
         *maybe_wifi_lock = Some(env.new_global_ref(wifi_lock).unwrap());
 
-        println!("ALXR: Wifi Lock Aquired");
+        log::info!("ALXR: Wifi Lock Aquired");
     }
 }
 
 pub fn release_wifi_lock() {
     if let Some(wifi_lock) = WIFI_LOCK.lock().take() {
-        println!("ALXR: Releasing Wifi Lock");
+        log::info!("ALXR: Releasing Wifi Lock");
 
         let vm_ptr = ndk_context::android_context().vm();
         let vm = unsafe { jni::JavaVM::from_raw(vm_ptr.cast()).unwrap() };
@@ -87,6 +87,6 @@ pub fn release_wifi_lock() {
             .unwrap();
 
         // wifi_lock is dropped here
-        println!("ALXR: Wifi Lock Released");
+        log::info!("ALXR: Wifi Lock Released");
     }
 }

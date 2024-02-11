@@ -59,31 +59,9 @@ fn get_firmware_version<'a>(jvm: &'a jni::JavaVM) -> ALXRVersion {
     }
 }
 
+#[allow(dead_code)]
 fn get_build_model<'a>(jvm: &'a jni::JavaVM) -> String {
     get_build_property(&jvm, "MODEL")
-}
-
-fn get_preferred_resolution<'a>(
-    jvm: &'a jni::JavaVM,
-    sys_prop: &ALXRSystemProperties,
-) -> Option<(u32, u32)> {
-    let sys_name = sys_prop.system_name();
-    let model_name = get_build_model(&jvm);
-    for name in [sys_name, model_name] {
-        match name.as_str() {
-            //"XR Elite" => return Some((1920, 1920)),
-            //"Focus 3" => return Some((2448, 2448)),
-            "Lynx" => return Some((1600, 1600)),
-            "Meta Quest Pro" => return Some((1800, 1920)),
-            "Pico Neo 3" | "Pico Neo 3 Link" | "Oculus Quest2" | "Oculus Quest 2" => {
-                return Some((1832, 1920))
-            }
-            "Oculus Quest" => return Some((1440, 1600)),
-            "Pico 4" | "A8150" => return Some((2160, 2160)),
-            _ => (),
-        }
-    }
-    None
 }
 
 #[no_mangle]
@@ -126,10 +104,18 @@ impl AppData {
         self.resumed = true;
     }
 
-    fn handle_lifecycle_event(&mut self, event: &PollEvent) {
+    fn handle_lifecycle_event(&mut self, android_app: &AndroidApp, event: &PollEvent) {
         match event {
             PollEvent::Main(main_event) => match main_event {
                 MainEvent::InitWindow { .. } => self.window_inited = true,
+                MainEvent::WindowResized { .. } => {
+                    let window = android_app.native_window().unwrap();
+                    log::info!(
+                        "alxr-client: received windows resize event, size: {0}x{1}",
+                        window.width(),
+                        window.height()
+                    );
+                }
                 MainEvent::LostFocus => {
                     log::info!("alxr-client: received lost_focus event.");
                     self.gained_focus = false;
@@ -161,7 +147,7 @@ fn wait_until_window_init(android_app: &AndroidApp, app_data: &mut AppData) {
     while !app_data.destroy_requested && !app_data.window_inited {
         log::info!("Waiting for native-window to initialize...");
         android_app.poll_events(Some(Duration::from_millis(100)), |event| {
-            app_data.handle_lifecycle_event(&event);
+            app_data.handle_lifecycle_event(&android_app, &event);
         });
     }
     let msg = if app_data.window_inited {
@@ -194,10 +180,10 @@ unsafe fn run(android_app: &AndroidApp) -> Result<(), Box<dyn std::error::Error>
         sys_properties: None,
     };
     wait_until_window_init(&android_app, &mut app_data);
-    if app_data.destroy_requested {
+    if app_data.destroy_requested || android_app.native_window().is_none() {
         return Ok(());
     }
-    assert!(app_data.window_inited);
+    assert!(app_data.window_inited && android_app.native_window().is_some());
     log::debug!("alxr-client: is activity paused? {0} ", !app_data.resumed);
 
     let ctx = ALXRClientCtx {
@@ -240,18 +226,25 @@ unsafe fn run(android_app: &AndroidApp) -> Result<(), Box<dyn std::error::Error>
         return Ok(());
     }
 
-    if let Some((eye_w, eye_h)) = get_preferred_resolution(&vm, &sys_properties) {
-        log::info!("ALXR: Overriding recommend eye resolution ({}x{}) with prefferred resolution ({eye_w}x{eye_h})",
-                    sys_properties.recommendedEyeWidth, sys_properties.recommendedEyeHeight);
-        sys_properties.recommendedEyeWidth = eye_w;
-        sys_properties.recommendedEyeHeight = eye_h;
-    }
+    let window = android_app.native_window().unwrap();
+    log::info!(
+        "alxr-client: window-size={0}x{1}",
+        window.width(),
+        window.height()
+    );
+
+    let (eye_w, eye_h) = ((window.width() / 2) as u32, window.height() as u32);
+    log::info!("alxr-client: Overriding OpeXR recommend eye resolution ({}x{}) with preferred resolution ({eye_w}x{eye_h})",
+                sys_properties.recommendedEyeWidth, sys_properties.recommendedEyeHeight);
+    sys_properties.recommendedEyeWidth = eye_w;
+    sys_properties.recommendedEyeHeight = eye_h;
+
     init_connections(&sys_properties);
     app_data.sys_properties = Some(sys_properties);
 
     while !app_data.destroy_requested {
         android_app.poll_events(NO_WAIT_TIME, |event| {
-            app_data.handle_lifecycle_event(&event);
+            app_data.handle_lifecycle_event(&android_app, &event);
         });
 
         let mut exit_render_loop = false;
