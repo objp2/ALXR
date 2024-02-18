@@ -276,7 +276,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-android-client"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -292,14 +292,14 @@ dependencies = [
 
 [[package]]
 name = "alxr-client"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "alxr-common",
 ]
 
 [[package]]
 name = "alxr-client-lynx"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-pico"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-pico-v4"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-quest"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -363,7 +363,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-uwp"
-version = "1.25.0"
+version = "1.26.0"
 dependencies = [
  "alxr-common",
  "toml 0.5.11",
@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-common"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "alvr_audio",
  "alvr_common",
@@ -398,7 +398,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-engine-sys"
-version = "0.25.0"
+version = "0.26.0"
 dependencies = [
  "bindgen 0.69.4",
  "cc",
@@ -4107,16 +4107,17 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.17.7"
+version = "0.17.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "688c63d65483050968b2a8937f7995f443e27041a0f7700aa59b0822aedebb74"
+checksum = "c17fa4cb658e3583423e915b9f3acc01cceaee1860e33d59ebae66adc3a2dc0d"
 dependencies = [
  "cc",
+ "cfg-if 1.0.0",
  "getrandom",
  "libc",
  "spin",
  "untrusted",
- "windows-sys 0.48.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
