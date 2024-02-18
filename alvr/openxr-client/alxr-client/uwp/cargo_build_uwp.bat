@@ -33,7 +33,7 @@ if exist !VCVarsAllBat! (
         set PATH=!UwpRuntimePath!;!PATH!
         set LINK=OneCore.lib WindowsApp.lib
     )
-    @REM cargo +nightly build -Z build-std=std,panic_abort --target !cargoArch!-uwp-windows-msvc %~2
+    @REM cargo +nightly-2024-02-12 build -Z build-std=std,panic_abort --target !cargoArch!-uwp-windows-msvc %~2
     @REM ^ the above was the old way to build with nightly toolchain before rustup v1.25.
-    rustup run nightly cargo build -Z build-std=std,panic_abort --target !cargoArch!-uwp-windows-msvc %~2
+    rustup run nightly-2024-02-12 cargo build -Z build-std=std,panic_abort --target !cargoArch!-uwp-windows-msvc %~2
 )
