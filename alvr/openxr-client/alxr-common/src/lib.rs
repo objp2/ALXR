@@ -429,156 +429,134 @@ pub extern "C" fn input_send(data_ptr: *const TrackingInfo) {
     fn from_tracking_quat(quat: &TrackingQuat) -> Quat {
         Quat::from_xyzw(quat.x, quat.y, quat.z, quat.w)
     }
-    #[inline(always)]
-    fn from_tracking_quat_val(quat: TrackingQuat) -> Quat {
-        from_tracking_quat(&quat)
-    }
+
     #[inline(always)]
     fn from_tracking_vector3(vec: &TrackingVector3) -> Vec3 {
         Vec3::new(vec.x, vec.y, vec.z)
     }
-    #[inline(always)]
-    fn from_tracking_vector3_val(vec: TrackingVector3) -> Vec3 {
-        from_tracking_vector3(&vec)
-    }
 
     let data: &TrackingInfo = unsafe { &*data_ptr };
-    if let Some(sender) = &*INPUT_SENDER.lock() {
-        let input = Input {
-            target_timestamp: std::time::Duration::from_nanos(data.targetTimestampNs),
-            device_motions: vec![
-                (
-                    *HEAD_ID,
-                    MotionData {
-                        orientation: from_tracking_quat(&data.headPose.orientation),
-                        position: from_tracking_vector3(&data.headPose.position),
-                        linear_velocity: None,
-                        angular_velocity: None,
+    let input = Input {
+        target_timestamp: std::time::Duration::from_nanos(data.targetTimestampNs),
+        device_motions: vec![
+            (
+                *HEAD_ID,
+                MotionData {
+                    orientation: from_tracking_quat(&data.headPose.orientation),
+                    position: from_tracking_vector3(&data.headPose.position),
+                    linear_velocity: None,
+                    angular_velocity: None,
+                },
+            ),
+            (
+                *LEFT_HAND_ID,
+                MotionData {
+                    orientation: from_tracking_quat(if data.controller[0].isHand {
+                        &data.controller[0].boneRootPose.orientation
+                    } else {
+                        &data.controller[0].pose.orientation
+                    }),
+                    position: from_tracking_vector3(if data.controller[0].isHand {
+                        &data.controller[0].boneRootPose.position
+                    } else {
+                        &data.controller[0].pose.position
+                    }),
+                    linear_velocity: Some(from_tracking_vector3(
+                        &data.controller[0].linearVelocity,
+                    )),
+                    angular_velocity: Some(from_tracking_vector3(
+                        &data.controller[0].angularVelocity,
+                    )),
+                },
+            ),
+            (
+                *RIGHT_HAND_ID,
+                MotionData {
+                    orientation: from_tracking_quat(if data.controller[1].isHand {
+                        &data.controller[1].boneRootPose.orientation
+                    } else {
+                        &data.controller[1].pose.orientation
+                    }),
+                    position: from_tracking_vector3(if data.controller[1].isHand {
+                        &data.controller[1].boneRootPose.position
+                    } else {
+                        &data.controller[1].pose.position
+                    }),
+                    linear_velocity: Some(from_tracking_vector3(
+                        &data.controller[1].linearVelocity,
+                    )),
+                    angular_velocity: Some(from_tracking_vector3(
+                        &data.controller[1].angularVelocity,
+                    )),
+                },
+            ),
+        ],
+        left_hand_tracking: None,
+        right_hand_tracking: None,
+        button_values: std::collections::HashMap::new(), // unused for now
+        legacy: LegacyInput {
+            mounted: data.mounted,
+            controllers: [
+                LegacyController {
+                    enabled: data.controller[0].enabled,
+                    is_hand: data.controller[0].isHand,
+                    buttons: data.controller[0].buttons,
+                    trackpad_position: Vec2::new(
+                        data.controller[0].trackpadPosition.x,
+                        data.controller[0].trackpadPosition.y,
+                    ),
+                    trigger_value: data.controller[0].triggerValue,
+                    grip_value: data.controller[0].gripValue,
+                    bone_rotations: {
+                        let bone_rotations = &data.controller[0].boneRotations;
+                        let mut array = [Quat::IDENTITY; 19];
+                        for i in 0..array.len() {
+                            array[i] = from_tracking_quat(&bone_rotations[i]);
+                        }
+                        array
                     },
-                ),
-                (
-                    *LEFT_HAND_ID,
-                    MotionData {
-                        orientation: from_tracking_quat(if data.controller[0].isHand {
-                            &data.controller[0].boneRootPose.orientation
-                        } else {
-                            &data.controller[0].pose.orientation
-                        }),
-                        position: from_tracking_vector3(if data.controller[0].isHand {
-                            &data.controller[0].boneRootPose.position
-                        } else {
-                            &data.controller[0].pose.position
-                        }),
-                        linear_velocity: Some(from_tracking_vector3(
-                            &data.controller[0].linearVelocity,
-                        )),
-                        angular_velocity: Some(from_tracking_vector3(
-                            &data.controller[0].angularVelocity,
-                        )),
+                    bone_positions_base: {
+                        let bone_positions = &data.controller[0].bonePositionsBase;
+                        let mut array = [Vec3::ZERO; 19];
+                        for i in 0..array.len() {
+                            array[i] = from_tracking_vector3(&bone_positions[i]);
+                        }
+                        array
                     },
-                ),
-                (
-                    *RIGHT_HAND_ID,
-                    MotionData {
-                        orientation: from_tracking_quat(if data.controller[1].isHand {
-                            &data.controller[1].boneRootPose.orientation
-                        } else {
-                            &data.controller[1].pose.orientation
-                        }),
-                        position: from_tracking_vector3(if data.controller[1].isHand {
-                            &data.controller[1].boneRootPose.position
-                        } else {
-                            &data.controller[1].pose.position
-                        }),
-                        linear_velocity: Some(from_tracking_vector3(
-                            &data.controller[1].linearVelocity,
-                        )),
-                        angular_velocity: Some(from_tracking_vector3(
-                            &data.controller[1].angularVelocity,
-                        )),
+                    hand_finger_confience: data.controller[0].handFingerConfidences,
+                },
+                LegacyController {
+                    enabled: data.controller[1].enabled,
+                    is_hand: data.controller[1].isHand,
+                    buttons: data.controller[1].buttons,
+                    trackpad_position: Vec2::new(
+                        data.controller[1].trackpadPosition.x,
+                        data.controller[1].trackpadPosition.y,
+                    ),
+                    trigger_value: data.controller[1].triggerValue,
+                    grip_value: data.controller[1].gripValue,
+                    bone_rotations: {
+                        let bone_rotations = &data.controller[1].boneRotations;
+                        let mut array = [Quat::IDENTITY; 19];
+                        for i in 0..array.len() {
+                            array[i] = from_tracking_quat(&bone_rotations[i]);
+                        }
+                        array
                     },
-                ),
+                    bone_positions_base: {
+                        let bone_positions = &data.controller[1].bonePositionsBase;
+                        let mut array = [Vec3::ZERO; 19];
+                        for i in 0..array.len() {
+                            array[i] = from_tracking_vector3(&bone_positions[i]);
+                        }
+                        array
+                    },
+                    hand_finger_confience: data.controller[1].handFingerConfidences,
+                },
             ],
-            left_hand_tracking: None,
-            right_hand_tracking: None,
-            button_values: std::collections::HashMap::new(), // unused for now
-            legacy: LegacyInput {
-                mounted: data.mounted,
-                controllers: [
-                    LegacyController {
-                        enabled: data.controller[0].enabled,
-                        is_hand: data.controller[0].isHand,
-                        buttons: data.controller[0].buttons,
-                        trackpad_position: Vec2::new(
-                            data.controller[0].trackpadPosition.x,
-                            data.controller[0].trackpadPosition.y,
-                        ),
-                        trigger_value: data.controller[0].triggerValue,
-                        grip_value: data.controller[0].gripValue,
-                        bone_rotations: {
-                            let vec = data.controller[0]
-                                .boneRotations
-                                .iter()
-                                .cloned()
-                                .map(from_tracking_quat_val)
-                                .collect::<Vec<_>>();
-
-                            let mut array = [Quat::IDENTITY; 19];
-                            array.copy_from_slice(&vec);
-                            array
-                        },
-                        bone_positions_base: {
-                            let vec = data.controller[0]
-                                .bonePositionsBase
-                                .iter()
-                                .cloned()
-                                .map(from_tracking_vector3_val)
-                                .collect::<Vec<_>>();
-
-                            let mut array = [Vec3::ZERO; 19];
-                            array.copy_from_slice(&vec);
-                            array
-                        },
-                        hand_finger_confience: data.controller[0].handFingerConfidences,
-                    },
-                    LegacyController {
-                        enabled: data.controller[1].enabled,
-                        is_hand: data.controller[1].isHand,
-                        buttons: data.controller[1].buttons,
-                        trackpad_position: Vec2::new(
-                            data.controller[1].trackpadPosition.x,
-                            data.controller[1].trackpadPosition.y,
-                        ),
-                        trigger_value: data.controller[1].triggerValue,
-                        grip_value: data.controller[1].gripValue,
-                        bone_rotations: {
-                            let vec = data.controller[1]
-                                .boneRotations
-                                .iter()
-                                .cloned()
-                                .map(from_tracking_quat_val)
-                                .collect::<Vec<_>>();
-
-                            let mut array = [Quat::IDENTITY; 19];
-                            array.copy_from_slice(&vec);
-                            array
-                        },
-                        bone_positions_base: {
-                            let vec = data.controller[1]
-                                .bonePositionsBase
-                                .iter()
-                                .cloned()
-                                .map(from_tracking_vector3_val)
-                                .collect::<Vec<_>>();
-                            let mut array = [Vec3::ZERO; 19];
-                            array.copy_from_slice(&vec);
-                            array
-                        },
-                        hand_finger_confience: data.controller[1].handFingerConfidences,
-                    },
-                ],
-            },
-        };
+        },
+    };
+    if let Some(sender) = &*INPUT_SENDER.lock() {
         sender.send(input).ok();
     }
 }
