@@ -280,6 +280,12 @@ async fn connection_pipeline(
         config_packet.eye_resolution_width, config_packet.eye_resolution_height
     );
     //println!("setting display refresh to {0}Hz", config_packet.fps);
+
+    let tracking_clientside_prediction = match &settings.headset.controllers {
+        Switch::Enabled(controllers) => controllers.clientside_prediction,
+        Switch::Disabled => false,
+    };
+
     unsafe {
         crate::alxr_set_stream_config(crate::ALXRStreamConfig {
             trackingSpaceType: ALXRTrackingSpace_StageRefSpace,
@@ -338,6 +344,7 @@ async fn connection_pipeline(
                 enableFEC: settings.connection.enable_fec,
                 realtimePriority: settings.video.client_request_realtime_decoder,
             },
+            clientPrediction: tracking_clientside_prediction,
         });
     }
 
@@ -354,11 +361,6 @@ async fn connection_pipeline(
     //         .into()
     //     ],
     // ))?;
-
-    let tracking_clientside_prediction = match &settings.headset.controllers {
-        Switch::Enabled(controllers) => controllers.clientside_prediction,
-        Switch::Disabled => false,
-    };
 
     // setup stream loops
 
@@ -509,16 +511,6 @@ async fn connection_pipeline(
                     )
                 };
             }
-        }
-    };
-
-    let tracking_interval = Duration::from_secs_f32(1_f32 / (config_packet.fps * 3_f32)); // Duration::from_secs_f32(1_f32 / 360_f32);//
-    let tracking_loop = async move {
-        let mut deadline = Instant::now();
-        loop {
-            unsafe { crate::alxr_on_tracking_update(tracking_clientside_prediction) };
-            deadline += tracking_interval;
-            time::sleep_until(deadline).await;
         }
     };
 
@@ -701,7 +693,6 @@ async fn connection_pipeline(
         },
         res = spawn_cancelable(game_audio_loop) => res,
         res = spawn_cancelable(microphone_loop) => res,
-        res = spawn_cancelable(tracking_loop) => res,
         res = spawn_cancelable(playspace_sync_loop) => res,
         res = spawn_cancelable(input_send_loop) => res,
         res = spawn_cancelable(time_sync_send_loop) => res,

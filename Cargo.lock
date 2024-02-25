@@ -276,7 +276,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-android-client"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -292,14 +292,14 @@ dependencies = [
 
 [[package]]
 name = "alxr-client"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "alxr-common",
 ]
 
 [[package]]
 name = "alxr-client-lynx"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-pico"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-pico-v4"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-quest"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -363,7 +363,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-uwp"
-version = "1.27.0"
+version = "1.28.0"
 dependencies = [
  "alxr-common",
  "toml 0.5.11",
@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-common"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "alvr_audio",
  "alvr_common",
@@ -398,7 +398,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-engine-sys"
-version = "0.27.0"
+version = "0.28.0"
 dependencies = [
  "bindgen 0.69.4",
  "cc",
@@ -849,9 +849,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.87"
+version = "1.0.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3286b845d0fccbdd15af433f61c5970e711987036cb468f437ff6badd70f4e24"
+checksum = "02f341c093d19155a6e41631ce5971aac4e9a868262212153124c15fa22d1cdc"
 dependencies = [
  "libc",
 ]
@@ -2481,9 +2481,9 @@ dependencies = [
 
 [[package]]
 name = "hermit-abi"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e18e4ebaca9e578405839cdf9098dc09a11ad532d94a6105a87c00c11b8a835"
+checksum = "379dada1584ad501b383485dd706b8afb7a70fcbc7f4da7d780638a5a6124a60"
 
 [[package]]
 name = "hexf-parse"
@@ -3323,7 +3323,7 @@ version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4161fcb6d602d4d2081af7c3a45852d875a03dd337a6bfdd6e06407b61342a43"
 dependencies = [
- "hermit-abi 0.3.7",
+ "hermit-abi 0.3.8",
  "libc",
 ]
 
