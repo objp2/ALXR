@@ -61,6 +61,7 @@ impl From<&str> for crate::ALXRFacialExpressionType {
         match trimmed {
             "None" => crate::ALXRFacialExpressionType::None,
             "FB" => crate::ALXRFacialExpressionType::FB,
+            "FB_V2" => crate::ALXRFacialExpressionType::FB_V2,
             "HTC" => crate::ALXRFacialExpressionType::HTC,
             "Pico" => crate::ALXRFacialExpressionType::Pico,
             _ => crate::ALXRFacialExpressionType::Auto,
