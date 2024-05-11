@@ -2,5 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/../../../.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../cpp/ALVR-OpenXR-Engine" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../cpp/ALVR-OpenXR-Engine/out/build/x64-Debug/_deps/eigen-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../cpp/ALVR-OpenXR-Engine/out/build/x64-Debug/_deps/readerwriterqueue-src" vcs="Git" />
   </component>
 </project>
