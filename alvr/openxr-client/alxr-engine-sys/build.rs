@@ -204,6 +204,10 @@ fn main() {
                 "-PbuildDir={}",
                 gradle_output_dir.to_string_lossy()
             ))
+            .arg(format!(
+                "-PABI={}",
+                android_abi_name(&target_triple).unwrap()
+            ))
             .arg(gradle_task_from_profile(&profile, &product_flavor))
             .current_dir(&android_dir)
             .status()
