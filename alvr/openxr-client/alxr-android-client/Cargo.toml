@@ -144,7 +144,7 @@ min_sdk_version = 28#24 # for offical low-latency medicodec mode to be enabled, 
 # Note: there can be multiple .uses_feature entries.
 [[package.metadata.android.uses_feature]]
 name = "android.hardware.vr.headtracking"
-required = false
+required = true
 version = 1
 
 [[package.metadata.android.uses_feature]]
@@ -268,6 +268,12 @@ name = "android.permission.WAKE_LOCK"
  #<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 [[package.metadata.android.uses_permission]]
 name = "android.permission.READ_EXTERNAL_STORAGE"
+
+[[package.metadata.android.uses_permission]]
+name = "android.permission.WRITE_EXTERNAL_STORAGE"
+
+[[package.metadata.android.uses_permission]]
+name = "android.permission.MANAGE_EXTERNAL_STORAGE"
 
 [[package.metadata.android.uses_permission]]
 name = "android.permission.VIBRATE"

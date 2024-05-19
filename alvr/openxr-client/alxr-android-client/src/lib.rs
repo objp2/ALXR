@@ -64,6 +64,30 @@ fn get_build_model<'a>(jvm: &'a jni::JavaVM) -> String {
     get_build_property(&jvm, "MODEL")
 }
 
+#[allow(dead_code)]
+fn get_build_device<'a>(jvm: &'a jni::JavaVM) -> String {
+    get_build_property(&jvm, "DEVICE")
+}
+
+#[allow(dead_code)]
+fn get_build_manufacturer<'a>(jvm: &'a jni::JavaVM) -> String {
+    get_build_property(&jvm, "MANUFACTURER")
+}
+
+#[allow(dead_code)]
+fn is_device<'a>(pname: &str, jvm: &'a jni::JavaVM) -> bool {
+    let key = pname.to_lowercase();
+    let model_name = get_build_model(&jvm).to_lowercase();
+    let device_name = get_build_device(&jvm).to_lowercase();
+    let man_name = get_build_manufacturer(&jvm).to_lowercase();
+    for dname in [model_name, device_name, man_name] {
+        if dname.contains(&key) {
+            return true;
+        }
+    }
+    false
+}
+
 #[no_mangle]
 fn android_main(android_app: AndroidApp) {
     let log_level = if cfg!(debug_assertions) {
@@ -186,6 +210,9 @@ unsafe fn run(android_app: &AndroidApp) -> Result<(), Box<dyn std::error::Error>
     assert!(app_data.window_inited && android_app.native_window().is_some());
     log::debug!("alxr-client: is activity paused? {0} ", !app_data.resumed);
 
+    let no_linearize_srgb = APP_CONFIG.no_linearize_srgb || is_device("Lynx", &vm);
+    log::info!("alxr-client: Disable shader gamma/sRGB linearization? {no_linearize_srgb}");
+
     let ctx = ALXRClientCtx {
         graphicsApi: APP_CONFIG.graphics_api.unwrap_or(ALXRGraphicsApi::Auto),
         decoderType: ALXRDecoderType::NVDEC, // Not used on android.
@@ -201,7 +228,7 @@ unsafe fn run(android_app: &AndroidApp) -> Result<(), Box<dyn std::error::Error>
         batterySend: Some(battery_send),
         setWaitingNextIDR: Some(set_waiting_next_idr),
         requestIDR: Some(request_idr),
-        disableLinearizeSrgb: APP_CONFIG.no_linearize_srgb,
+        disableLinearizeSrgb: no_linearize_srgb,
         noSuggestedBindings: APP_CONFIG.no_bindings,
         noServerFramerateLock: APP_CONFIG.no_server_framerate_lock,
         noFrameSkip: APP_CONFIG.no_frameskip,

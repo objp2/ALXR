@@ -99,19 +99,17 @@ fn cmake_option_from_feature(feature_name: &str) -> &'static str {
     cmake_option_from_bool(is_feature_enabled(&feature_name))
 }
 
-const FALVOR_FEATURE_NAMES: [&'static str; 5] = [
+const FALVOR_FEATURE_NAMES: [&'static str; 4] = [
     "GENERIC_FLAVOR",
     "QUEST_FLAVOR",
     "PICO_V4_FLAVOR",
     "PICO_FLAVOR",
-    "LYNX_FLAVOR",
 ];
-const GRADLE_FLAVOR_NAMES: [&'static str; 5] = [
+const GRADLE_FLAVOR_NAMES: [&'static str; 4] = [
     "Generic",
     "OculusMobileOXR",
     "PicoMobileOXR_V4",
     "PicoMobileOXR",
-    "LynxOXR",
 ];
 
 fn get_product_flavour() -> &'static str {

@@ -22,6 +22,5 @@ members = [
     "alvr/openxr-client/alxr-android-client/quest",
     "alvr/openxr-client/alxr-android-client/pico",
     "alvr/openxr-client/alxr-android-client/pico-v4",
-    "alvr/openxr-client/alxr-android-client/lynx",
     "alvr/xtask",
 ]
