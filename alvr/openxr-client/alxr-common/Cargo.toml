@@ -1,6 +1,6 @@
 [package]
 name = "alxr-common"
-version = "0.36.0"
+version = "0.37.0"
 authors = ["korejan <64199710+korejan@users.noreply.github.com>"]
 edition = "2021"
 
@@ -8,7 +8,6 @@ edition = "2021"
 [features]
 # These are only used for android builds.
 generic-flavor = ["alxr-engine-sys/generic-flavor"] # default if none specified.
-quest-flavor = ["alxr-engine-sys/quest-flavor"]
 pico-flavor = ["alxr-engine-sys/pico-flavor"]
 # These features are only for non-android builds.
 cuda-interop = ["alxr-engine-sys/cuda-interop"]

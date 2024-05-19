@@ -170,9 +170,8 @@ pub fn bump_alxr_version(maybe_version: Option<String>, is_nightly: bool) {
         "alxr-engine-sys",
         "alxr-common",
         "alxr-client",
-        "alxr-android-client",
-        "alxr-android-client/pico",
-        "alxr-android-client/quest",
+        "alxr-client-android",
+        "alxr-client-android/pico",
     ]
     .into_iter()
     .map(|d| base_dir.join(&d).to_str().unwrap().to_owned())

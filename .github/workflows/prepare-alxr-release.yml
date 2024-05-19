@@ -370,16 +370,6 @@ jobs:
           asset_path: ./build/release/alxr_client_android/alxr-client.apk
           asset_name: alxr-client.apk
           asset_content_type: application/vnd.android.package-archive
-      
-      - name: Upload alxr-android-quest-release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.prepare_release.outputs.upload_url }}
-          asset_path: ./build/release/alxr_client_android/alxr-client-quest.apk
-          asset_name: alxr-client-quest.apk
-          asset_content_type: application/vnd.android.package-archive
 
       - name: Upload alxr-android-pico-release
         uses: actions/upload-release-asset@v1
@@ -434,17 +424,7 @@ jobs:
           mv alxr-client.apk alxr-client-debug.apk
           popd
           cargo clean
-      
-      - name: Build & Package alxr-android-quest-debug
-        run: |
-          unset ANDROID_HOME
-          JAVA_HOME=$JAVA_HOME_17_X64
-          cargo xtask build-alxr-quest
-          pushd ./build/debug/alxr_client_android
-          mv alxr-client-quest.apk alxr-client-quest-debug.apk
-          popd
-          cargo clean
-      
+
       - name: Build & Package alxr-android-pico-debug
         run: |
           unset ANDROID_HOME
@@ -464,17 +444,7 @@ jobs:
           asset_path: ./build/debug/alxr_client_android/alxr-client-debug.apk
           asset_name: alxr-client-debug.apk
           asset_content_type: application/vnd.android.package-archive
-      
-      - name: Upload alxr-android-quest-debug
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.prepare_release.outputs.upload_url }}
-          asset_path: ./build/debug/alxr_client_android/alxr-client-quest-debug.apk
-          asset_name: alxr-client-quest-debug.apk
-          asset_content_type: application/vnd.android.package-archive
-      
+
       - name: Upload alxr-android-pico-debug
         uses: actions/upload-release-asset@v1
         env:

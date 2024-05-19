@@ -33,7 +33,7 @@ SUBCOMMANDS:
     build-alxr-app-bundle Build UWP app-bundle (.msixbundle) from `build-alxr-uwp` builds.
     build-alxr-appimage Build OpenXR based client AppImage for linux only.
     build-alxr-android  Build OpenXR based client (android platforms only), then copy binaries to build folder
-    build-alxr-quest    Build OpenXR based client for Oculus Quest (same as `build-alxr-android --oculus-quest`), then copy binaries to build folder
+    build-alxr-quest    Build OpenXR based client for Oculus Quest (same as `build-alxr-android --target aarch64-linux-android`), then copy binaries to build folder
     build-alxr-pico     Build OpenXR based client for Pico 4/Neo 3 PUI >= 5.2.x (same as `build-alxr-android --pico`), then copy binaries to build folder
     build-ffmpeg-linux  Build FFmpeg with VAAPI, NvEnc and Vulkan support. Only for CI
     publish-server      Build server in release mode, make portable version and installer
@@ -56,6 +56,7 @@ FLAGS:
     --generic           Generic Android build (cross-vendor openxr loader). Used only for build-alxr-android subcommand
     --pico-neo          Pico Neo 3 build. Used only for build-alxr-android subcommand
     --all-flavors       Build all android variants (Generic,Quest,Pico, etc), Used only for build-alxr-android subcommand
+    --target <ABI>      Build only for specific android CPU arch, options: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android, i686-linux-android. Used only for build-alxr-android subcommand.
     --bundle-ffmpeg     Bundle ffmpeg libraries. Only used for build-server subcommand on Linux
     --no-nvidia         Additional flag to use with `build-server` or `build-alxr-client`. Disables nVidia/CUDA support.
     --gpl               Enables usage of GPL libs like ffmpeg on Windows, allowing software encoding.
@@ -895,17 +896,21 @@ fn install_alxr_depends() {
 #[derive(Clone, Copy, Debug)]
 pub enum AndroidFlavor {
     Generic,
-    OculusQuest, // Q1 or Q2
-    Pico,        // PUI >= 5.2.x
+    Pico, // PUI >= 5.2.x
 }
 
 pub fn build_alxr_android(
     root: Option<String>,
     client_flavor: AndroidFlavor,
+    abi_target: Option<String>,
     flags: AlxBuildFlags,
 ) {
     let build_type = if flags.is_release { "release" } else { "debug" };
-    let build_flags = flags.make_build_string();
+    let mut build_flags = flags.make_build_string();
+    if let Some(abi_str) = abi_target {
+        let target_flag = " --target ".to_owned() + &abi_str;
+        build_flags.push_str(&target_flag);
+    }
 
     if let Some(root) = root {
         env::set_var("ALVR_ROOT_DIR", root);
@@ -921,7 +926,6 @@ pub fn build_alxr_android(
     fs::create_dir_all(&alxr_client_build_dir).unwrap();
 
     let client_dir = match client_flavor {
-        AndroidFlavor::OculusQuest => "quest",
         AndroidFlavor::Pico => "pico",
         _ => "",
     };
@@ -934,7 +938,7 @@ pub fn build_alxr_android(
     // The workaround is set different "target-dir" for each variant/flavour of android builds.
     let target_dir = afs::target_dir().join(client_dir);
     let alxr_client_dir = afs::workspace_dir()
-        .join("alvr/openxr-client/alxr-android-client")
+        .join("alvr/openxr-client/alxr-client-android")
         .join(client_dir);
 
     command::run_in(
@@ -1035,6 +1039,7 @@ fn main() {
         let gpl = args.contains("--gpl");
         let reproducible = args.contains("--reproducible");
         let root: Option<String> = args.opt_value_from_str("--root").unwrap();
+        let abi_target: Option<String> = args.opt_value_from_str("--target").unwrap();
 
         let default_var = String::from("release/5.1");
         let mut ffmpeg_version: String =
@@ -1146,21 +1151,23 @@ fn main() {
                         ..Default::default()
                     };
                     let flavours = vec![
-                        (for_generic, AndroidFlavor::Generic),
-                        (for_oculus_quest, AndroidFlavor::OculusQuest),
-                        (for_pico, AndroidFlavor::Pico),
+                        (for_generic, AndroidFlavor::Generic, abi_target.clone()),
+                        (for_pico, AndroidFlavor::Pico, Option::None),
                     ];
 
-                    for (_, flavour) in flavours.iter().filter(|(f, _)| for_all_flavors || *f) {
-                        build_alxr_android(root.clone(), *flavour, build_flags);
+                    for (_, flavour, maybe_abi) in
+                        flavours.iter().filter(|(f, _, _)| for_all_flavors || *f)
+                    {
+                        build_alxr_android(root.clone(), *flavour, maybe_abi.clone(), build_flags);
                     }
-                    if !for_all_flavors && flavours.iter().all(|(flag, _)| !flag) {
-                        build_alxr_android(root, AndroidFlavor::Generic, build_flags);
+                    if !for_all_flavors && flavours.iter().all(|(flag, _, _)| !flag) {
+                        build_alxr_android(root, AndroidFlavor::Generic, abi_target, build_flags);
                     }
                 }
                 "build-alxr-quest" => build_alxr_android(
                     root,
-                    AndroidFlavor::OculusQuest,
+                    AndroidFlavor::Generic,
+                    Some("aarch64-linux-android".to_string()),
                     AlxBuildFlags {
                         is_release: is_release,
                         reproducible: reproducible,
@@ -1174,6 +1181,7 @@ fn main() {
                 "build-alxr-pico" => build_alxr_android(
                     root,
                     AndroidFlavor::Pico,
+                    Option::None,
                     AlxBuildFlags {
                         is_release: is_release,
                         reproducible: reproducible,

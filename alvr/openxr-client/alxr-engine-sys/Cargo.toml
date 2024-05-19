@@ -1,6 +1,6 @@
 [package]
 name = "alxr-engine-sys"
-version = "0.36.0"
+version = "0.37.0"
 authors = ["korejan <64199710+korejan@users.noreply.github.com>"]
 edition = "2021"
 links = "alxr_engine"
@@ -8,7 +8,6 @@ links = "alxr_engine"
 [features]
 # These are only used for android builds.
 generic-flavor = [] # default if none specified.
-quest-flavor = []
 pico-flavor = []
 
 # These features are only for non-android builds.

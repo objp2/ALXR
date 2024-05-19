@@ -238,12 +238,7 @@ jobs:
         run: |
           unset ANDROID_HOME
           JAVA_HOME=$JAVA_HOME_17_X64
-          cargo apk build -p alxr-android-client
-      - name: Build alxr-android-quest
-        run: |
-          unset ANDROID_HOME
-          JAVA_HOME=$JAVA_HOME_17_X64
-          cargo apk build -p alxr-client-quest --target-dir=target/quest
+          cargo apk build -p alxr-client-android
       
       - name: Build alxr-android-pico
         run: |

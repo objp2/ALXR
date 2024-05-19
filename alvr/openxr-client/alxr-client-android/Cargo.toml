@@ -1,6 +1,6 @@
 [package]
-name = "alxr-android-client"
-version = "0.36.0"
+name = "alxr-client-android"
+version = "0.37.0"
 authors = ["korejan <64199710+korejan@users.noreply.github.com>"]
 edition = "2021"
 description = "An OpenXR based ALVR client for android platorms"
@@ -61,12 +61,6 @@ package = "com.alvr.alxr_client"
 # The user-friendly name for your app, as displayed in the applications menu.
 label = "alxr_client"
 
-# This is automatically set from cargo version, do no define!
-#version_code = 1
-
-# This is automatically set from cargo version, do no define!
-#version_name = "1.0"
-
 install_location = "auto"
 
 # Path to your application's res/ folder.
@@ -84,14 +78,6 @@ install_location = "auto"
 # Defaults to false.
 fullscreen = true
 
-# The maximum supported OpenGL ES version , as claimed by the manifest. Defaults to 2.0.
-# See https://developer.android.com/guide/topics/graphics/opengl.html#manifest
-#opengles_version_major = 3
-#opengles_version_minor = 2
-# Set the minimum required OpenGL ES version.
-# Defaults to [3, 1]
-#opengles_version = [3, 2]
-
 # Defaults to `$HOME/.android/debug.keystore` for the `dev` profile. Will ONLY generate a new
 # debug.keystore if this file does NOT exist.
 # A keystore path is always required on the `release` profile.
@@ -103,10 +89,9 @@ keystore_password = "android"
 #
 # Defaults to a `min_sdk_version` of 23 and `target_sdk_version` is based on the ndk's default platform.
 [package.metadata.android.sdk]
-target_sdk_version = 29
+target_sdk_version = 32
 compile_sdk = 34
-min_sdk_version = 28#24 # for offical low-latency medicodec mode to be enabled, min sdk must be >= 30.
-#max_sdk_version = 30
+min_sdk_version = 29#24 # for offical low-latency medicodec mode to be enabled, min sdk must be >= 30.
 
 #[dependencies.android_glue]
 #path = "../../glue"
@@ -133,7 +118,7 @@ min_sdk_version = 28#24 # for offical low-latency medicodec mode to be enabled, 
 "android:theme" ="@android:style/Theme.Black.NoTitleBar.Fullscreen"
 "android:launchMode" = "singleTask"
 "android:screenOrientation" = "landscape"
-"android:excludeFromRecents" = "false"
+"android:excludeFromRecents" = "true"
 "android:resizeableActivity"= "false"
 "android:configChanges" = "screenSize|screenLayout|orientation|keyboardHidden|keyboard|navigation|uiMode|density"
 #"android:enableVrMode" = "com.google.vr.vrcore/com.google.vr.vrcore.common.VrCoreListenerService"
@@ -151,21 +136,9 @@ version = 1
 opengles_version = [3, 2]
 required = true
 
-# [[package.metadata.android.uses_feature]]
-# name = "oculus.software.handtracking"
-# required = false
-
-# [[package.metadata.android.uses_feature]]
-# name = "android.hardware.microphone"
-# required = true
 [[package.metadata.android.uses_feature]]
 name = "android.hardware.microphone"
 required = true
-
-#[[package.metadata.android.uses_feature]]
-#name = "android.hardware.vulkan.compute"
-#version = 0
-#required = true
 
 [[package.metadata.android.uses_feature]]
 name = "android.hardware.vulkan.level"
@@ -177,29 +150,25 @@ name = "android.hardware.vulkan.version"
 version = 0x00401000
 required = true
 
-#   <uses-feature android:name="com.oculus.experimental.enabled" android:required="true" />
-#   <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
-# [[package.metadata.android.uses_feature]]
-# name = "com.oculus.experimental.enabled"
-# required = true
+[[package.metadata.android.uses_feature]]
+name = "oculus.software.handtracking"
+required = false
 
-# [[package.metadata.android.uses_feature]]
-# name = "com.oculus.feature.PASSTHROUGH"
-# required = true
+[[package.metadata.android.uses_feature]]
+name = "com.oculus.experimental.enabled"
+required = true
 
-# <uses-feature android:name="android.software.vr.mode" android:required="false"/>
-# <uses-feature android:name="android.hardware.vr.high_performance" android:required="false"/>
-# [[package.metadata.android.uses_feature]]
-# name = "android.software.vr.mode"
-# required = false
+[[package.metadata.android.uses_feature]]
+name = "com.oculus.feature.PASSTHROUGH"
+required = true
 
-# [[package.metadata.android.uses_feature]]
-# name = "android.hardware.vr.high_performance"
-# required = false
+[[package.metadata.android.uses_feature]]
+name = "oculus.software.eye_tracking"
+required = true
 
-#[package.metadata.android.uses_feature]
-#glEsVersion = "0x00030002"
-#required = true
+[[package.metadata.android.uses_feature]]
+name = "oculus.software.face_tracking"
+required = true
 
 [[package.metadata.android.uses_feature]]
 name = "wave.feature.handtracking"
@@ -211,17 +180,10 @@ required = true
 #name = "wave.feature.simultaneous_interaction"
 #required = true
 
-#<uses-feature
-#    android:name="wave.feature.eyetracking"
-#    android:required="true" />
-#
 [[package.metadata.android.uses_feature]]
 name = "wave.feature.eyetracking"
 required = true
 
-#<uses-feature
-#    android:name="wave.feature.lipexpression"
-#    android:required="true" />
 [[package.metadata.android.uses_feature]]
 name = "wave.feature.lipexpression"
 required = true
@@ -231,20 +193,6 @@ required = true
 name = "com.magicleap.api_level"
 version = 20
 
-# See https://developer.android.com/guide/topics/manifest/uses-permission-element
-#
-# Note: there can be multiple .uses_permission entries.
-#[[package.metadata.android.uses_permission]]
-#name = "android.permission.WRITE_EXTERNAL_STORAGE"
-#max_sdk_version = 18
-
-#[[package.metadata.android.permission]]
-#name = "android.permission.CAMERA"
-
-#<uses-permission android:name="android.permission.INTERNET" />
-#<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-# [[package.metadata.android.uses_permission]]
-# name = "android.permission.RECORD_AUDIO"
 [[package.metadata.android.uses_permission]]
 name = "android.permission.MODIFY_AUDIO_SETTINGS"
 
@@ -257,15 +205,15 @@ name = "android.permission.INTERNET"
 [[package.metadata.android.uses_permission]]
 name = "android.permission.ACCESS_NETWORK_STATE"
 
-# <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 [[package.metadata.android.uses_permission]]
 name = "android.permission.ACCESS_WIFI_STATE"
 
-# android.permission.WAKE_LOCK
 [[package.metadata.android.uses_permission]]
 name = "android.permission.WAKE_LOCK"
 
- #<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+[[package.metadata.android.uses_permission]]
+name = "com.oculus.permission.WIFI_LOCK"
+
 [[package.metadata.android.uses_permission]]
 name = "android.permission.READ_EXTERNAL_STORAGE"
 
@@ -281,25 +229,18 @@ name = "android.permission.VIBRATE"
 #[[package.metadata.android.uses_permission]]
 #name = "android.permission.CAMERA"
 
-#<!-- Allows to access TrackingEnvironment functionality -->
-# [[package.metadata.android.uses_permission]]
-# name = "com.oculus.permission.ACCESS_TRACKING_ENV"
+[[package.metadata.android.uses_permission]]
+name = "com.oculus.permission.HAND_TRACKING"
 
-#<!-- Grants access to Spatial Anchors. -->
-# [[package.metadata.android.uses_permission]]
-# name = "com.oculus.permission.USE_ANCHOR_API"
+[[package.metadata.android.uses_permission]]
+name = "com.oculus.permission.EYE_TRACKING"
 
-#[[package.metadata.android.uses_permission]]
-#name = "oculus.permission.handtracking"
+[[package.metadata.android.uses_permission]]
+name = "com.oculus.permission.FACE_TRACKING"
 
-# [[package.metadata.android.uses_permission]]
-# name = "com.oculus.permission.HAND_TRACKING"
-
-#<uses-permission android:name="com.magicleap.permission.HAND_TRACKING" />
 [[package.metadata.android.uses_permission]]
 name = "com.magicleap.permission.HAND_TRACKING"
 
-#<uses-permission android:name="com.magicleap.permission.EYE_TRACKING" />
 [[package.metadata.android.uses_permission]]
 name = "com.magicleap.permission.EYE_TRACKING"
 
@@ -394,45 +335,31 @@ orientation = "landscape"
 
 resizeableActivity = "false"
 
-#enable_vrmode = "com.google.vr.vrcore/com.google.vr.vrcore.common.VrCoreListenerService"
 # [[package.metadata.android.application.meta_data]]
 # name = "com.samsung.android.vr.application.mode"
 # value = "vr_only"
 
-# for Pico Neo OXR runtime.
-# [[package.metadata.android.application.meta_data]]
-# name = "pvr.app.type"
-# value = "vr"
+[[package.metadata.android.application.meta_data]]
+name = "com.oculus.supportedDevices"
+value = "all"
 
-# [[package.metadata.android.application.meta_data]]
-# name = "com.oculus.supportedDevices"
-# value = "all"
+[[package.metadata.android.application.meta_data]]
+name = "com.oculus.handtracking.version"
+value = "V2.0"
 
-# [[package.metadata.android.application.meta_data]]
-# name = "com.oculus.vr.focusaware"
-# value = "true"
-
-# <meta-data android:name="com.oculus.handtracking.version" android:value="V2.0"/>
-# [[package.metadata.android.application.meta_data]]
-# name = "com.oculus.handtracking.version"
-# value = "V2.0"
-
-# [[package.metadata.android.application.meta_data]]
-# name = "com.oculus.handtracking.frequency"
-# value = "HIGH"
-
-# See https://developer.android.com/guide/topics/manifest/meta-data-element
-#
-# Note: there can be several .meta_data entries.
-# Note: the `resource` attribute is currently not supported.
-#[[package.metadata.android.application.activity.meta_data]]
-#name = "android.app.lib_name"
-#value = "alxr_client"
+[[package.metadata.android.application.meta_data]]
+name = "com.oculus.handtracking.frequency"
+value = "HIGH"
 
 #[[package.metadata.android.application.activity.intent_filters]] -- old version of cargo-apk/manifest.rs
 [[package.metadata.android.application.activity.intent_filter]]
 actions = ["android.intent.action.MAIN"]
-categories = ["android.intent.category.LAUNCHER", "org.khronos.openxr.intent.category.IMMERSIVE_HMD"]
+categories = [
+    "android.intent.category.LAUNCHER",
+    "org.khronos.openxr.intent.category.IMMERSIVE_HMD",
+    "com.oculus.intent.category.VR",
+    "com.yvr.intent.category.VR",
+]
 
 # See https://developer.android.com/guide/topics/manifest/data-element
 #
