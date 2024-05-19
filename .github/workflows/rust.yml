@@ -250,13 +250,7 @@ jobs:
           unset ANDROID_HOME
           JAVA_HOME=$JAVA_HOME_17_X64
           cargo apk build -p alxr-client-pico --target-dir=target/pico
-      
-      - name: Build alxr-android-pico-v4
-        run: |
-          unset ANDROID_HOME
-          JAVA_HOME=$JAVA_HOME_17_X64
-          cargo apk build -p alxr-client-pico-v4 --target-dir=target/pico-v4
-  
+
   tests:
     runs-on: ubuntu-latest
     steps:

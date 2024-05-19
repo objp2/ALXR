@@ -10,7 +10,6 @@ links = "alxr_engine"
 generic-flavor = [] # default if none specified.
 quest-flavor = []
 pico-flavor = []
-pico-v4-flavor = []
 
 # These features are only for non-android builds.
 cuda-interop = []

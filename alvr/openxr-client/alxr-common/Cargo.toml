@@ -10,7 +10,6 @@ edition = "2021"
 generic-flavor = ["alxr-engine-sys/generic-flavor"] # default if none specified.
 quest-flavor = ["alxr-engine-sys/quest-flavor"]
 pico-flavor = ["alxr-engine-sys/pico-flavor"]
-pico-v4-flavor = ["alxr-engine-sys/pico-v4-flavor"]
 # These features are only for non-android builds.
 cuda-interop = ["alxr-engine-sys/cuda-interop"]
 bundled-ffmpeg = ["alxr-engine-sys/bundled-ffmpeg"]

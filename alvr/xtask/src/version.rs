@@ -172,7 +172,6 @@ pub fn bump_alxr_version(maybe_version: Option<String>, is_nightly: bool) {
         "alxr-client",
         "alxr-android-client",
         "alxr-android-client/pico",
-        "alxr-android-client/pico-v4",
         "alxr-android-client/quest",
     ]
     .into_iter()
