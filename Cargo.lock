@@ -88,7 +88,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_audio"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_common",
  "alvr_session",
@@ -105,7 +105,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_client"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_audio",
  "alvr_common",
@@ -130,7 +130,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_commands"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_common",
  "alvr_filesystem",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_common"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "backtrace",
  "glam",
@@ -157,7 +157,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_filesystem"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "dirs",
  "lazy_static",
@@ -166,7 +166,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_launcher"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_commands",
  "alvr_common",
@@ -183,7 +183,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_server"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alcro",
  "alvr_audio",
@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_session"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_common",
  "bytemuck",
@@ -231,7 +231,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_sockets"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_common",
  "alvr_session",
@@ -250,7 +250,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_vulkan-layer"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_filesystem",
  "bindgen 0.69.4",
@@ -261,7 +261,7 @@ dependencies = [
 
 [[package]]
 name = "alvr_xtask"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "alvr_filesystem",
  "camino",
@@ -276,14 +276,14 @@ dependencies = [
 
 [[package]]
 name = "alxr-client"
-version = "0.38.2"
+version = "0.39.0"
 dependencies = [
  "alxr-common",
 ]
 
 [[package]]
 name = "alxr-client-android"
-version = "0.38.2"
+version = "0.39.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -299,7 +299,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-pico"
-version = "0.38.2"
+version = "0.39.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-uwp"
-version = "1.38.2"
+version = "1.39.0"
 dependencies = [
  "alxr-common",
  "toml 0.5.11",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-common"
-version = "0.38.2"
+version = "0.39.0"
 dependencies = [
  "alvr_audio",
  "alvr_common",
@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-engine-sys"
-version = "0.38.2"
+version = "0.39.0"
 dependencies = [
  "bindgen 0.69.4",
  "cc",
@@ -816,9 +816,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.98"
+version = "1.0.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41c270e7540d725e65ac7f1b212ac8ce349719624d7bcff99f8e2e488e8cf03f"
+checksum = "96c51067fd44124faa7f870b4b1c969379ad32b2ba805aa959430ceaa384f695"
 dependencies = [
  "jobserver",
  "libc",
@@ -4017,9 +4017,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.10.4"
+version = "1.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c117dbdfde9c8308975b6a18d71f3f385c89461f7b3fb054288ecf2a2058ba4c"
+checksum = "b91213439dad192326a0d7c6ee3955910425f441d7038e0d6933b0aec5c4517f"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -4029,9 +4029,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.6"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86b83b8b9847f9bf95ef68afb0b8e6cdb80f498442f5179a29fad448fcc1eaea"
+checksum = "38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -4040,9 +4040,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
+checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
 
 [[package]]
 name = "renderdoc-sys"
@@ -4970,9 +4970,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite"
-version = "0.21.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c83b561d025642014097b66e6c1bb422783339e0909e4429cde4749d1990bc38"
+checksum = "becd34a233e7e31a3dbf7c7241b38320f57393dcae8e7324b0167d21b8e320b0"
 dependencies = [
  "futures-util",
  "log",
@@ -5055,7 +5055,7 @@ dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "winnow 0.6.11",
+ "winnow 0.6.13",
 ]
 
 [[package]]
@@ -5091,9 +5091,9 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tungstenite"
-version = "0.21.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ef1a641ea34f399a848dea702823bbecfb4c486f911735368f1f137cb8257e1"
+checksum = "6e2e2ce1e47ed2994fd43b04c8f618008d4cabdd5ee34027cf14f9d918edd9c8"
 dependencies = [
  "byteorder",
  "bytes",
@@ -5104,7 +5104,6 @@ dependencies = [
  "rand",
  "sha1 0.10.6",
  "thiserror",
- "url",
  "utf-8",
 ]
 
@@ -5315,7 +5314,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "vrcompositor-wrapper"
-version = "18.12.0"
+version = "18.13.0"
 dependencies = [
  "exec",
 ]
@@ -6051,9 +6050,9 @@ dependencies = [
 
 [[package]]
 name = "winnow"
-version = "0.6.11"
+version = "0.6.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56c52728401e1dc672a56e81e593e912aa54c78f40246869f78359a2bf24d29d"
+checksum = "59b5e5f6c299a3c7890b876a2a587f3115162487e704907d9b6cd29473052ba1"
 dependencies = [
  "memchr",
 ]
