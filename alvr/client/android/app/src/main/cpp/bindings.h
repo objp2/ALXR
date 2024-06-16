@@ -50,6 +50,7 @@ typedef struct TrackingInfo {
         ALXRVector3f angularVelocity;
         ALXRVector3f linearVelocity;
 
+        ALXRVector2f joystickPosition;
         ALXRVector2f trackpadPosition;
 
         uint64_t buttons;

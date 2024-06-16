@@ -23,25 +23,15 @@ struct TrackingVector2 {
     float y;
 };
 struct TrackingInfo {
-    unsigned long long targetTimestampNs;
-    TrackingQuat HeadPose_Pose_Orientation;
-    TrackingVector3 HeadPose_Pose_Position;
-
-    unsigned char mounted;
-
     static const unsigned int MAX_CONTROLLERS = 2;
+    static const unsigned int BONE_COUNT = 19;
     struct Controller {
-        bool enabled;
-        bool isHand;
-        unsigned long long buttons;
-
-        struct {
-            float x;
-            float y;
-        } trackpadPosition;
-
-        float triggerValue;
-        float gripValue;
+        // Tracking info of hand. A3
+        TrackingQuat boneRotations[BONE_COUNT];
+        // TrackingQuat boneRotationsBase[alvrHandBone_MaxSkinnable];
+        TrackingVector3 bonePositionsBase[BONE_COUNT];
+        TrackingQuat boneRootOrientation;
+        TrackingVector3 boneRootPosition;
 
         // Tracking info of controller. (float * 19 = 76 bytes)
         TrackingQuat orientation;
@@ -49,14 +39,25 @@ struct TrackingInfo {
         TrackingVector3 angularVelocity;
         TrackingVector3 linearVelocity;
 
-        // Tracking info of hand. A3
-        TrackingQuat boneRotations[19];
-        // TrackingQuat boneRotationsBase[alvrHandBone_MaxSkinnable];
-        TrackingVector3 bonePositionsBase[19];
-        TrackingQuat boneRootOrientation;
-        TrackingVector3 boneRootPosition;
+        TrackingVector2 joystickPosition;
+        TrackingVector2 trackpadPosition;
+
+        unsigned long long buttons;
+
+        float triggerValue;
+        float gripValue;
+
         unsigned int handFingerConfidences;
-    } controller[2];
+
+        bool enabled;
+        bool isHand;
+    } controller[MAX_CONTROLLERS];
+
+    TrackingQuat HeadPose_Pose_Orientation;
+    TrackingVector3 HeadPose_Pose_Position;
+
+    unsigned long long targetTimestampNs;
+    unsigned char mounted;
 };
 // Client >----(mode 0)----> Server
 // Client <----(mode 1)----< Server

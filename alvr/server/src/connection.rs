@@ -1,7 +1,7 @@
 use crate::{
     connection_utils, ClientListAction, EyeFov, TimeSync, TrackingInfo, TrackingInfo_Controller,
-    TrackingInfo_Controller__bindgen_ty_1, TrackingQuat, TrackingVector3, CLIENTS_UPDATED_NOTIFIER,
-    HAPTICS_SENDER, RESTART_NOTIFIER, SESSION_MANAGER, TIME_SYNC_SENDER, VIDEO_SENDER,
+    TrackingQuat, TrackingVector2, TrackingVector3, CLIENTS_UPDATED_NOTIFIER, HAPTICS_SENDER,
+    RESTART_NOTIFIER, SESSION_MANAGER, TIME_SYNC_SENDER, VIDEO_SENDER,
 };
 use alvr_audio::{AudioDevice, AudioDeviceType};
 use alvr_common::{
@@ -769,6 +769,7 @@ async fn connection_pipeline() -> StrResult {
         }
     };
 
+    #[inline(always)]
     fn to_tracking_quat(quat: Quat) -> TrackingQuat {
         TrackingQuat {
             x: quat.x,
@@ -778,6 +779,12 @@ async fn connection_pipeline() -> StrResult {
         }
     }
 
+    #[inline(always)]
+    fn to_tracking_vector2(vec: Vec2) -> TrackingVector2 {
+        TrackingVector2 { x: vec.x, y: vec.y }
+    }
+
+    #[inline(always)]
     fn to_tracking_vector3(vec: Vec3) -> TrackingVector3 {
         TrackingVector3 {
             x: vec.x,
@@ -823,10 +830,12 @@ async fn connection_pipeline() -> StrResult {
                             enabled: input.legacy.controllers[0].enabled,
                             isHand: input.legacy.controllers[0].is_hand,
                             buttons: input.legacy.controllers[0].buttons,
-                            trackpadPosition: TrackingInfo_Controller__bindgen_ty_1 {
-                                x: input.legacy.controllers[0].trackpad_position.x,
-                                y: input.legacy.controllers[0].trackpad_position.y,
-                            },
+                            joystickPosition: to_tracking_vector2(
+                                input.legacy.controllers[0].joystick_position,
+                            ),
+                            trackpadPosition: to_tracking_vector2(
+                                input.legacy.controllers[0].trackpad_position,
+                            ),
                             triggerValue: input.legacy.controllers[0].trigger_value,
                             gripValue: input.legacy.controllers[0].grip_value,
                             orientation: to_tracking_quat(left_hand_motion.orientation),
@@ -872,10 +881,12 @@ async fn connection_pipeline() -> StrResult {
                             enabled: input.legacy.controllers[1].enabled,
                             isHand: input.legacy.controllers[1].is_hand,
                             buttons: input.legacy.controllers[1].buttons,
-                            trackpadPosition: TrackingInfo_Controller__bindgen_ty_1 {
-                                x: input.legacy.controllers[1].trackpad_position.x,
-                                y: input.legacy.controllers[1].trackpad_position.y,
-                            },
+                            joystickPosition: to_tracking_vector2(
+                                input.legacy.controllers[1].joystick_position,
+                            ),
+                            trackpadPosition: to_tracking_vector2(
+                                input.legacy.controllers[1].trackpad_position,
+                            ),
                             triggerValue: input.legacy.controllers[1].trigger_value,
                             gripValue: input.legacy.controllers[1].grip_value,
                             orientation: to_tracking_quat(right_hand_motion.orientation),

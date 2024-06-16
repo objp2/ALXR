@@ -1406,13 +1406,13 @@ bool OvrController::onPoseUpdate(const TrackingInfo::Controller &c) {
                 m_handles[ALVR_INPUT_GRIP_VALUE], c.gripValue * 2.0, 0.0);
             vr::VRDriverInput()->UpdateScalarComponent(
                 m_handles[ALVR_INPUT_TRACKPAD_X], c.trackpadPosition.x, 0.0);
-            vr::VRDriverInput()->UpdateScalarComponent(m_handles[ALVR_INPUT_TRACKPAD_Y], 0, 0.0);
+            vr::VRDriverInput()->UpdateScalarComponent(m_handles[ALVR_INPUT_TRACKPAD_Y], c.trackpadPosition.y, 0.0);
             vr::VRDriverInput()->UpdateBooleanComponent(
                 m_handles[ALVR_INPUT_TRACKPAD_TOUCH], false, 0.0);
             vr::VRDriverInput()->UpdateScalarComponent(
-                m_handles[ALVR_INPUT_JOYSTICK_X], c.trackpadPosition.x, 0.0);
+                m_handles[ALVR_INPUT_JOYSTICK_X], c.joystickPosition.x, 0.0);
             vr::VRDriverInput()->UpdateScalarComponent(
-                m_handles[ALVR_INPUT_JOYSTICK_Y], c.trackpadPosition.y, 0.0);
+                m_handles[ALVR_INPUT_JOYSTICK_Y], c.joystickPosition.y, 0.0);
             vr::VRDriverInput()->UpdateBooleanComponent(
                 m_handles[ALVR_INPUT_JOYSTICK_CLICK],
                 (c.buttons & ALVR_BUTTON_FLAG(ALVR_INPUT_JOYSTICK_CLICK)) != 0,
@@ -1611,9 +1611,9 @@ bool OvrController::onPoseUpdate(const TrackingInfo::Controller &c) {
                 (c.buttons & ALVR_BUTTON_FLAG(ALVR_INPUT_JOYSTICK_CLICK)) != 0,
                 0.0);
             vr::VRDriverInput()->UpdateScalarComponent(
-                m_handles[ALVR_INPUT_JOYSTICK_X], c.trackpadPosition.x, 0.0);
+                m_handles[ALVR_INPUT_JOYSTICK_X], c.joystickPosition.x, 0.0);
             vr::VRDriverInput()->UpdateScalarComponent(
-                m_handles[ALVR_INPUT_JOYSTICK_Y], c.trackpadPosition.y, 0.0);
+                m_handles[ALVR_INPUT_JOYSTICK_Y], c.joystickPosition.y, 0.0);
             vr::VRDriverInput()->UpdateBooleanComponent(
                 m_handles[ALVR_INPUT_JOYSTICK_TOUCH],
                 (c.buttons & ALVR_BUTTON_FLAG(ALVR_INPUT_JOYSTICK_TOUCH)) != 0,

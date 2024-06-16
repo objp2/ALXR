@@ -435,6 +435,11 @@ pub extern "C" fn input_send(data_ptr: *const TrackingInfo) {
         Vec3::new(vec.x, vec.y, vec.z)
     }
 
+    #[inline(always)]
+    fn from_tracking_vector2(vec: &TrackingVector2) -> Vec2 {
+        Vec2::new(vec.x, vec.y)
+    }
+
     let data: &TrackingInfo = unsafe { &*data_ptr };
     let input = Input {
         target_timestamp: std::time::Duration::from_nanos(data.targetTimestampNs),
@@ -491,9 +496,9 @@ pub extern "C" fn input_send(data_ptr: *const TrackingInfo) {
                 },
             ),
         ],
-        left_hand_tracking: None,
-        right_hand_tracking: None,
-        button_values: std::collections::HashMap::new(), // unused for now
+        // left_hand_tracking: None,
+        // right_hand_tracking: None,
+        // button_values: std::collections::HashMap::new(), // unused for now
         legacy: LegacyInput {
             mounted: data.mounted,
             controllers: [
@@ -501,10 +506,8 @@ pub extern "C" fn input_send(data_ptr: *const TrackingInfo) {
                     enabled: data.controller[0].enabled,
                     is_hand: data.controller[0].isHand,
                     buttons: data.controller[0].buttons,
-                    trackpad_position: Vec2::new(
-                        data.controller[0].trackpadPosition.x,
-                        data.controller[0].trackpadPosition.y,
-                    ),
+                    joystick_position: from_tracking_vector2(&data.controller[0].joystickPosition),
+                    trackpad_position: from_tracking_vector2(&data.controller[0].trackpadPosition),
                     trigger_value: data.controller[0].triggerValue,
                     grip_value: data.controller[0].gripValue,
                     bone_rotations: {
@@ -529,10 +532,8 @@ pub extern "C" fn input_send(data_ptr: *const TrackingInfo) {
                     enabled: data.controller[1].enabled,
                     is_hand: data.controller[1].isHand,
                     buttons: data.controller[1].buttons,
-                    trackpad_position: Vec2::new(
-                        data.controller[1].trackpadPosition.x,
-                        data.controller[1].trackpadPosition.y,
-                    ),
+                    joystick_position: from_tracking_vector2(&data.controller[1].joystickPosition),
+                    trackpad_position: from_tracking_vector2(&data.controller[1].trackpadPosition),
                     trigger_value: data.controller[1].triggerValue,
                     grip_value: data.controller[1].gripValue,
                     bone_rotations: {
