@@ -271,6 +271,7 @@ fn main() {
         .rustified_enum("ALXRFacialExpressionType")
         .rustified_enum("ALXREyeTrackingType")
         .rustified_enum("ALXRPassthroughMode")
+        .rustified_enum("ALXRFaceTrackingDataSource")
         .generate()
         .expect("bindings")
         .write_to_file(out_dir.join("alxr_engine.rs"))

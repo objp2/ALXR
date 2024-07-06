@@ -237,6 +237,7 @@ unsafe fn run(android_app: &AndroidApp) -> Result<(), Box<dyn std::error::Error>
         noPassthrough: APP_CONFIG.no_passthrough,
         noFTServer: APP_CONFIG.no_tracking_server,
         noHandTracking: APP_CONFIG.no_hand_tracking,
+        faceTrackingDataSources: APP_CONFIG.get_face_tracking_data_source_flags(),
         facialTracking: APP_CONFIG
             .facial_tracking
             .unwrap_or(ALXRFacialExpressionType::Auto),

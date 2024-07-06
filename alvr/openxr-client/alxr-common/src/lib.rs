@@ -95,6 +95,10 @@ pub struct Options {
     #[structopt(/*short,*/ long)]
     pub no_hand_tracking: bool,
 
+    /// Specifices which tracking sources to use for face-tracking, default is VisualSource only
+    #[structopt(long, parse(from_str), default_value = "VisualSource")]
+    pub face_tracking_data_sources: Option<Vec<ALXRFaceTrackingDataSource>>,
+
     /// Disable or Specify which type of facial tracking extension to use, default is auto detection in order of vendor specific to multi-vendor
     #[structopt(long, parse(from_str))]
     pub facial_tracking: Option<ALXRFacialExpressionType>,
@@ -118,6 +122,25 @@ pub struct Options {
     pub passthrough_mode: Option<ALXRPassthroughMode>,
 }
 
+impl Options {
+    pub fn get_face_tracking_data_source_flags(self: &Self) -> u32 {
+        let mut source_flags: u32 = 0;
+        if let Some(sources) = &self.face_tracking_data_sources {
+            for source in sources {
+                if *source == ALXRFaceTrackingDataSource::VisualSource {
+                    source_flags |=
+                        ALXRFaceTrackingDataSourceFlags_ALXR_FACE_TRACKING_DATA_SOURCE_VISUAL;
+                }
+                if *source == ALXRFaceTrackingDataSource::AudioSource {
+                    source_flags |=
+                        ALXRFaceTrackingDataSourceFlags_ALXR_FACE_TRACKING_DATA_SOURCE_AUDIO;
+                }
+            }
+        }
+        source_flags
+    }
+}
+
 #[cfg(target_os = "android")]
 impl Options {
     pub fn from_system_properties() -> Self {
@@ -138,6 +161,7 @@ impl Options {
             no_tracking_server: false,
             no_passthrough: false,
             no_hand_tracking: false,
+            face_tracking_data_sources: Some(vec![ALXRFaceTrackingDataSource::VisualSource]),
             facial_tracking: Some(ALXRFacialExpressionType::Auto),
             eye_tracking: Some(ALXREyeTrackingType::Auto),
             tracking_server_port_no: ALXR_TRACKING_SERVER_PORT_NO,
@@ -326,6 +350,7 @@ impl Options {
             no_tracking_server: false,
             no_passthrough: false,
             no_hand_tracking: false,
+            face_tracking_data_sources: Some(vec![ALXRFaceTrackingDataSource::VisualSource]),
             facial_tracking: Some(ALXRFacialExpressionType::Auto),
             eye_tracking: Some(ALXREyeTrackingType::Auto),
             tracking_server_port_no: ALXR_TRACKING_SERVER_PORT_NO,

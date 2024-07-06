@@ -91,6 +91,17 @@ impl From<&str> for crate::ALXRPassthroughMode {
     }
 }
 
+impl From<&str> for crate::ALXRFaceTrackingDataSource {
+    fn from(input: &str) -> Self {
+        let trimmed = input.trim();
+        match trimmed {
+            "VisualSource" => crate::ALXRFaceTrackingDataSource::VisualSource,
+            "AudioSource" => crate::ALXRFaceTrackingDataSource::AudioSource,
+            _ => crate::ALXRFaceTrackingDataSource::UnknownSource,
+        }
+    }
+}
+
 impl ALXRSystemProperties {
     pub fn new() -> ALXRSystemProperties {
         ALXRSystemProperties {
