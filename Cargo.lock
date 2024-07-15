@@ -276,14 +276,14 @@ dependencies = [
 
 [[package]]
 name = "alxr-client"
-version = "0.43.1"
+version = "0.44.0"
 dependencies = [
  "alxr-common",
 ]
 
 [[package]]
 name = "alxr-client-android"
-version = "0.43.1"
+version = "0.44.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -299,7 +299,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-pico"
-version = "0.43.1"
+version = "0.44.0"
 dependencies = [
  "alxr-common",
  "android-activity",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-client-uwp"
-version = "1.43.1"
+version = "1.44.0"
 dependencies = [
  "alxr-common",
  "toml 0.5.11",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-common"
-version = "0.43.1"
+version = "0.44.0"
 dependencies = [
  "alvr_audio",
  "alvr_common",
@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "alxr-engine-sys"
-version = "0.43.1"
+version = "0.44.0"
 dependencies = [
  "bindgen 0.69.4",
  "cc",
@@ -815,13 +815,12 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.4"
+version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9711f33475c22aab363b05564a17d7b789bf3dfec5ebabb586adee56f0e271b5"
+checksum = "324c74f2155653c90b04f25b2a47a8a631360cb908f92a772695f430c7e31052"
 dependencies = [
  "jobserver",
  "libc",
- "once_cell",
 ]
 
 [[package]]
@@ -3604,7 +3603,7 @@ checksum = "1e401f977ab385c9e4e3ab30627d6f26d00e2c73eef317493c4ec6d468726cf8"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
- "redox_syscall 0.5.2",
+ "redox_syscall 0.5.3",
  "smallvec",
  "windows-targets 0.52.6",
 ]
@@ -3996,9 +3995,9 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c82cf8cff14456045f55ec4241383baeff27af886adb72ffb2162f99911de0fd"
+checksum = "2a908a6e00f1fdd0dfd9c0eb08ce85126f6d8bbda50017e74bc4a4b7d4a926a4"
 dependencies = [
  "bitflags 2.6.0",
 ]

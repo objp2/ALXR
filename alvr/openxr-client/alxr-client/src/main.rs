@@ -79,6 +79,7 @@ fn main() {
                 passthroughMode: APP_CONFIG
                     .passthrough_mode
                     .unwrap_or(ALXRPassthroughMode::None),
+                internalDataPath: std::ptr::null(),
             };
             let mut sys_properties = ALXRSystemProperties::new();
             if !alxr_init(&ctx, &mut sys_properties) {
