@@ -360,6 +360,7 @@ fn find_linked_native_paths(
     crate_path: &Path,
     build_flags: &str,
     nightly: bool,
+    nightly_version: &str,
     env_var: Option<(&str, &str)>,
 ) -> Result<PathSet, Box<dyn Error>> {
     // let manifest_file = crate_path.join("Cargo.toml");
@@ -370,11 +371,16 @@ fn find_linked_native_paths(
     //     Some(p) => p,
     //     None => return Err("cargo out-dir must be run from within a crate".into()),
     // };
+    let mut nightly_tag = String::from("nightly");
+    if nightly_version.len() > 0 {
+        nightly_tag = format!("nightly-{}", nightly_version);
+    }
+
     let mut cmd = "cargo";
     let mut args = vec!["check", "--message-format=json", "--quiet"];
     if nightly {
         cmd = "rustup";
-        let mut args1 = vec!["run", "nightly", "cargo"];
+        let mut args1 = vec!["run", &nightly_tag, "cargo"];
         args1.append(&mut args);
         args = args1;
     }
@@ -584,7 +590,7 @@ pub fn build_alxr_client(root: Option<String>, ffmpeg_version: &str, flags: AlxB
 
     println!("Searching for linked native dependencies, please wait this may take some time.");
     let linked_paths =
-        find_linked_native_paths(&alxr_client_dir, &build_flags, false, None).unwrap();
+        find_linked_native_paths(&alxr_client_dir, &build_flags, false, "", None).unwrap();
     for linked_path in linked_paths.iter() {
         for linked_depend_file in walkdir::WalkDir::new(linked_path)
             .into_iter()
@@ -709,8 +715,14 @@ pub fn build_alxr_uwp(root: Option<String>, arch: UWPArch, flags: AlxBuildFlags)
         let find_flags =
             format!("-Z build-std=std,panic_abort --target {target_type} {build_flags}");
         println!("Searching for linked native dependencies, please wait this may take some time.");
-        let linked_paths =
-            find_linked_native_paths(&alxr_client_dir, &find_flags, true, uwp_rt_var_path).unwrap();
+        let linked_paths = find_linked_native_paths(
+            &alxr_client_dir,
+            &find_flags,
+            true,
+            "2024-07-19",
+            uwp_rt_var_path,
+        )
+        .unwrap();
         for linked_path in linked_paths.iter() {
             for linked_depend_file in walkdir::WalkDir::new(linked_path)
                 .into_iter()
