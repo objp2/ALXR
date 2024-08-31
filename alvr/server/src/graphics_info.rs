@@ -8,9 +8,7 @@ lazy_static! {
             ..Default::default()
         });
 
-        instance
-            .enumerate_adapters(wgpu::Backends::PRIMARY)
-            .collect()
+        instance.enumerate_adapters(wgpu::Backends::PRIMARY)
     };
 }
 
