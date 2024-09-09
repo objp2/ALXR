@@ -10,6 +10,7 @@
 #include "Utils.h"
 #include "VSyncThread.h"
 #include "bindings.h"
+#include "include/openvr_math.h"
 #include <cfloat>
 
 #ifdef _WIN32
@@ -23,12 +24,12 @@
 const vr::HmdMatrix34_t MATRIX_IDENTITY = {
     {{1.0, 0.0, 0.0, 0.0}, {0.0, 1.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}}};
 
-vr::HmdRect2_t fov_to_projection(EyeFov fov) {
+inline vr::HmdRect2_t fov_to_projection(const EyeFov& fov) {
     auto proj_bounds = vr::HmdRect2_t{};
     proj_bounds.vTopLeft.v[0] = tanf(fov.left);
     proj_bounds.vBottomRight.v[0] = tanf(fov.right);
-    proj_bounds.vTopLeft.v[1] = -tanf(fov.top);
-    proj_bounds.vBottomRight.v[1] = -tanf(fov.bottom);
+    proj_bounds.vTopLeft.v[1] = tanf(fov.bottom);
+    proj_bounds.vBottomRight.v[1] = tanf(fov.top);
 
     return proj_bounds;
 }
@@ -417,8 +418,17 @@ void OvrHmd::StartStreaming() {
     m_streamComponentsInitialized = true;
 }
 
-void OvrHmd::SetViewsConfig(ViewsConfigData config) {
+void OvrHmd::SetViewsConfig(const ViewsConfigData &config) {
     this->views_config = config;
+
+    const float viewportWidth = Settings::Instance().m_renderWidth / 2;
+    const float viewportHeight = Settings::Instance().m_renderHeight;
+    
+    const std::array<vr::HmdRect2_t,2> view_projs = {
+        fov_to_projection(config.fov[0]),
+        fov_to_projection(config.fov[1])
+    };
+    SetHiddenAreaMeshes(config, view_projs);
 
     auto left_transform = MATRIX_IDENTITY;
     left_transform.m[0][3] = -config.ipd_m / 2.0;
@@ -426,14 +436,46 @@ void OvrHmd::SetViewsConfig(ViewsConfigData config) {
     right_transform.m[0][3] = config.ipd_m / 2.0;
     vr::VRServerDriverHost()->SetDisplayEyeToHead(object_id, left_transform, right_transform);
 
-    auto left_proj = fov_to_projection(config.fov[0]);
-    auto right_proj = fov_to_projection(config.fov[1]);
-
-    vr::VRServerDriverHost()->SetDisplayProjectionRaw(object_id, left_proj, right_proj);
+    vr::VRServerDriverHost()->SetDisplayProjectionRaw(object_id, view_projs[0], view_projs[1]);
 
     // todo: check if this is still needed
     vr::VRServerDriverHost()->VendorSpecificEvent(
         object_id, vr::VREvent_LensDistortionChanged, {}, 0);
+}
+
+void OvrHmd::SetHiddenAreaMeshes(const ViewsConfigData &config,
+                                 const std::array<vr::HmdRect2_t,2>& view_projs) {
+    for (size_t viewIdx = 0; viewIdx < 2; ++viewIdx) {
+        views_config.hidden_area_mesh[viewIdx] = {};
+        const auto& src_ham = config.hidden_area_mesh[viewIdx];
+        if (src_ham.vertices == nullptr || src_ham.indices == nullptr ||
+            src_ham.indexCount == 0 || src_ham.vertexCount == 0) {
+            continue;
+        }
+        auto& dst_ham_ndc = m_hiddenAreaMeshesNDC[viewIdx];
+        auto& dst_ham_vp = m_hiddenAreaMeshesVP[viewIdx];
+        dst_ham_ndc.clear();
+        dst_ham_vp.clear();
+        dst_ham_ndc.reserve(src_ham.indexCount);
+        dst_ham_vp.reserve(src_ham.indexCount);
+        vr::HmdMatrix44_t proj_mat={};
+        vrmath::makeProjection(view_projs[viewIdx], 0.05f, 100.0f, proj_mat);
+        for (std::size_t idx = 0; idx < src_ham.indexCount; ++idx) {
+            const auto& src_vert = src_ham.vertices[src_ham.indices[idx]];
+            vr::HmdVector3_t ndc_vert = vrmath::project(proj_mat, {{src_vert.x,src_vert.y, -1.f, 1.f}});
+            // ndc verts
+            dst_ham_ndc.push_back({{ndc_vert.v[0], ndc_vert.v[1]}});
+            // ndc -> viewport space (not screen-space)
+            ndc_vert.v[0] = ((ndc_vert.v[0] + 1.f) * .5f);
+            ndc_vert.v[1] = ((1.f - ndc_vert.v[1]) * .5f);
+            dst_ham_vp.push_back({{ndc_vert.v[0], ndc_vert.v[1]}});
+        }
+        vr::VRHiddenArea()->SetHiddenArea((vr::EVREye)viewIdx, vr::k_eHiddenAreaMesh_Standard, dst_ham_vp.data(), dst_ham_vp.size());
+    }
+    
+    if (auto encoder = m_encoder) {
+        encoder->SetVisibilityMasks(m_hiddenAreaMeshesNDC);
+    }
 }
 
 void OvrHmd::updateController(const TrackingInfo &info) {

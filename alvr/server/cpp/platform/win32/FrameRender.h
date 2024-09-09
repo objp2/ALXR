@@ -2,6 +2,9 @@
 
 #include <string>
 #include <memory>
+#include <array>
+#include <vector>
+#include <mutex>
 #include <stdint.h>
 
 #include <d3d11.h>
@@ -50,6 +53,11 @@ public:
 	bool RenderFrame(ID3D11Texture2D *pTexture[][2], vr::VRTextureBounds_t bounds[][2], int layerCount, bool recentering, const std::string& message, const std::string& debugText);
 	void GetEncodingResolution(uint32_t *width, uint32_t *height);
 
+	typedef std::vector<vr::HmdVector2_t> HiddenAreaMesh;
+    typedef std::array<HiddenAreaMesh, 2> HiddenAreaMeshViews;
+    // projected triangles in NDC space
+	bool SetVisibilityMasks(const HiddenAreaMeshViews& hams);
+
 	ComPtr<ID3D11Texture2D> GetTexture();
 private:
 	std::shared_ptr<CD3DRender> m_pD3DRender;
@@ -91,6 +99,26 @@ private:
 	std::unique_ptr<FFR> m_ffr;
 	bool enableFFR;
 
+	struct VisibilityMaskState final {
+		ComPtr<ID3D11VertexShader> vertexShader{};
+		ComPtr<ID3D11PixelShader>  pixelShader{};
+		ComPtr<ID3D11InputLayout> vertexLayout{};
+		struct VertexBuffer final {
+			ComPtr<ID3D11Buffer> vb{};
+			uint32_t vertexCount{0};
+		};
+		std::array<VertexBuffer,2> vertexBuffers{};
+		ComPtr<ID3D11DepthStencilState> fillStencilState{};
+		ComPtr<ID3D11DepthStencilState> testStencilState{};
+		ComPtr<ID3D11BlendState> noBlendState{};
+		ComPtr<ID3D11RasterizerState> noCullState{};
+		bool isDirty{false};
+	} m_visibilityMaskState{};
+	mutable std::mutex m_visibilityMaskMutex{};
+	
+	void RenderVisibilityMaskIfDirty();
+	void RenderVisibilityMaskNoLock();
+	
 	static bool SetGpuPriority(ID3D11Device* device)
 	{
 		typedef enum _D3DKMT_SCHEDULINGPRIORITYCLASS {

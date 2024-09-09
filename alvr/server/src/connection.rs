@@ -1005,7 +1005,33 @@ async fn connection_pipeline() -> StrResult {
                     crate::VideoErrorReportReceive()
                 },
                 Ok(ClientControlPacket::ViewsConfig(config)) => unsafe {
-                    crate::SetViewsConfig(crate::ViewsConfigData {
+                    let mut verts = [Vec::new(), Vec::new()];
+                    let mut indxs = [Vec::new(), Vec::new()];
+                    let empty_ham = crate::HiddenAreaMesh {
+                        vertices: std::ptr::null(),
+                        vertexCount: 0,
+                        indices: std::ptr::null(),
+                        indexCount: 0,
+                    };
+                    let mut hams = [empty_ham, empty_ham];
+                    for i in 0..hams.len() {
+                        let src_ham = &config.hidden_area_meshes[i];
+                        if src_ham.vertices.len() == 0 || src_ham.indices.len() == 0 {
+                            break;
+                        }
+                        indxs[i] = src_ham.indices.clone();
+                        verts[i].reserve(src_ham.vertices.len());
+                        for v in &src_ham.vertices {
+                            verts[i].push(TrackingVector2 { x: v.x, y: v.y });
+                        }
+                        hams[i] = crate::HiddenAreaMesh {
+                            vertices: verts[i].as_ptr(),
+                            vertexCount: verts[i].len() as _,
+                            indices: indxs[i].as_ptr(),
+                            indexCount: indxs[i].len() as _,
+                        };
+                    }
+                    let vc = crate::ViewsConfigData {
                         fov: [
                             EyeFov {
                                 left: config.fov[0].left,
@@ -1021,7 +1047,9 @@ async fn connection_pipeline() -> StrResult {
                             },
                         ],
                         ipd_m: config.ipd_m,
-                    });
+                        hidden_area_mesh: hams,
+                    };
+                    crate::SetViewsConfig(&vc);
                 },
                 Ok(ClientControlPacket::Battery(packet)) => unsafe {
                     crate::SetBattery(packet.device_id, packet.gauge_value, packet.is_plugged);

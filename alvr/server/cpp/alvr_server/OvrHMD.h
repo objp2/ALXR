@@ -4,6 +4,8 @@
 #include "TrackedDevice.h"
 #include "openvr_driver.h"
 #include <memory>
+#include <array>
+#include <vector>
 #ifdef _WIN32
 #include "platform/win32/OvrDirectModeComponent.h"
 #endif
@@ -46,7 +48,7 @@ class OvrHmd : public TrackedDevice,
 
     void updateController(const TrackingInfo &info);
 
-    void SetViewsConfig(ViewsConfigData config);
+    void SetViewsConfig(const ViewsConfigData &config);
 
     bool IsTrackingRef() const { return m_deviceClass == vr::TrackedDeviceClass_TrackingReference; }
     bool IsHMD() const { return m_deviceClass == vr::TrackedDeviceClass_HMD; }
@@ -99,4 +101,14 @@ class OvrHmd : public TrackedDevice,
     std::shared_ptr<PoseHistory> m_poseHistory;
 
     std::shared_ptr<OvrViveTrackerProxy> m_viveTrackerProxy;
+
+    typedef std::vector<vr::HmdVector2_t> HiddenAreaMesh;
+    typedef std::array<HiddenAreaMesh, 2> HiddenAreaMeshViews;
+    // projected triangles in NDC space
+    HiddenAreaMeshViews m_hiddenAreaMeshesNDC;
+    // projected triangles in viewport space (not screen-space).
+    HiddenAreaMeshViews m_hiddenAreaMeshesVP;
+
+    void SetHiddenAreaMeshes(const ViewsConfigData &config,
+                             const std::array<vr::HmdRect2_t,2>& view_projs);
 };

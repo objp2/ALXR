@@ -135,9 +135,17 @@ struct OpenvrProperty {
     OpenvrPropertyValue value;
 };
 
+typedef struct HiddenAreaMesh {
+    const TrackingVector2* vertices;
+    unsigned int vertexCount;
+    const unsigned int* indices;
+    unsigned int indexCount;
+} HiddenAreaMesh;
+
 struct ViewsConfigData {
     EyeFov fov[2];
     float ipd_m;
+    HiddenAreaMesh hidden_area_mesh[2];
 };
 
 extern "C" const unsigned char *FRAME_RENDER_VS_CSO_PTR;
@@ -179,5 +187,5 @@ extern "C" void VideoErrorReportReceive();
 extern "C" void ShutdownSteamvr();
 
 extern "C" void SetOpenvrProperty(unsigned long long topLevelPath, OpenvrProperty prop);
-extern "C" void SetViewsConfig(ViewsConfigData config);
+extern "C" void SetViewsConfig(const ViewsConfigData* config);
 extern "C" void SetBattery(unsigned long long topLevelPath, float gauge_value, bool is_plugged);

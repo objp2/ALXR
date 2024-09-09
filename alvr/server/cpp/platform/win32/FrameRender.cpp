@@ -334,7 +334,9 @@ bool FrameRender::RenderFrame(ID3D11Texture2D *pTexture[][2], vr::VRTextureBound
 	m_pD3DRender->GetContext()->RSSetViewports(1, &viewport);
 
 	// Clear the back buffer
-	m_pD3DRender->GetContext()->ClearRenderTargetView(m_pRenderTargetView.Get(), DirectX::Colors::MidnightBlue);
+	m_pD3DRender->GetContext()->ClearRenderTargetView(m_pRenderTargetView.Get(), DirectX::Colors::Black);
+
+	RenderVisibilityMaskIfDirty();
 
 	// Overlay recentering texture on top of all layers.
 	int recenterLayer = -1;
@@ -492,4 +494,194 @@ void FrameRender::GetEncodingResolution(uint32_t *width, uint32_t *height) {
 		*height = Settings::Instance().m_renderHeight;
 	}
 	
+}
+
+void FrameRender::RenderVisibilityMaskIfDirty() {
+	std::scoped_lock<std::mutex> lock(m_visibilityMaskMutex);
+	RenderVisibilityMaskNoLock();
+	if (m_visibilityMaskState.testStencilState != nullptr) {
+		m_pD3DRender->GetContext()->OMSetDepthStencilState(m_visibilityMaskState.testStencilState.Get(), 1);
+	}
+}
+
+void FrameRender::RenderVisibilityMaskNoLock() {
+	if (!m_visibilityMaskState.isDirty)
+		return;
+
+	auto deviceCtx = m_pD3DRender->GetContext();
+	if (deviceCtx == nullptr || m_pDepthStencilView == nullptr)
+		return;
+	if (m_visibilityMaskState.pixelShader == nullptr ||
+		m_visibilityMaskState.vertexShader == nullptr)
+		return;
+
+    deviceCtx->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_STENCIL, 1.0f, 0);
+    deviceCtx->OMSetDepthStencilState(m_visibilityMaskState.fillStencilState.Get(), 1);  // Use stencil ref = 1
+	const float blendFactor[4] = {0, 0, 0, 0};
+	constexpr const UINT sampleMask = 0xFFFFFFFF;
+	deviceCtx->OMSetBlendState(m_visibilityMaskState.noBlendState.Get(), blendFactor, sampleMask);
+	deviceCtx->RSSetState(m_visibilityMaskState.noCullState.Get());
+
+	deviceCtx->VSSetShader(m_visibilityMaskState.vertexShader.Get(), nullptr, 0);
+	deviceCtx->PSSetShader(m_visibilityMaskState.pixelShader.Get(), nullptr, 0);
+	deviceCtx->IASetInputLayout(m_visibilityMaskState.vertexLayout.Get());
+
+	for (size_t viewIdx = 0; viewIdx < 2; ++viewIdx) {
+		const auto& vbuff = m_visibilityMaskState.vertexBuffers[viewIdx];
+		if (vbuff.vb == nullptr || vbuff.vertexCount == 0)
+			continue;
+		D3D11_VIEWPORT viewport = {};
+		viewport.Width = (float)Settings::Instance().m_renderWidth * .5f;
+		viewport.Height = (float)Settings::Instance().m_renderHeight;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		viewport.TopLeftX = (float)viewIdx * viewport.Width;
+		viewport.TopLeftY = 0;
+		deviceCtx->RSSetViewports(1, &viewport);
+
+		const constexpr UINT stride = sizeof(vr::HmdVector2_t);
+		const constexpr UINT offset = 0;
+		deviceCtx->IASetVertexBuffers(0, 1, vbuff.vb.GetAddressOf(), &stride, &offset);
+		deviceCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		deviceCtx->Draw(vbuff.vertexCount, 0);
+	}
+
+	// Reset viewport back
+	D3D11_VIEWPORT viewport = {};
+	viewport.Width = (float)Settings::Instance().m_renderWidth;
+	viewport.Height = (float)Settings::Instance().m_renderHeight;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	m_pD3DRender->GetContext()->RSSetViewports(1, &viewport);
+
+	m_visibilityMaskState.isDirty = false;
+}
+
+// projected triangles in NDC space.
+bool FrameRender::SetVisibilityMasks(const FrameRender::HiddenAreaMeshViews& hams) {
+	if (hams[0].empty() || hams[1].empty())
+		return false;
+	std::scoped_lock<std::mutex> lock{m_visibilityMaskMutex};
+
+	auto device = m_pD3DRender->GetDevice();
+	auto deviceCtx = m_pD3DRender->GetContext();
+	if (device == nullptr || deviceCtx == nullptr)
+		return false;
+
+	constexpr const DWORD CompileFlags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS
+#if defined(NDEBUG)
+		| D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#else
+		| D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
+#endif
+
+	if (m_visibilityMaskState.vertexShader == nullptr) {
+		static constexpr const char* const VShaderSrc = R"(
+			struct VS_INPUT {
+				float2 pos : POSITION;
+			};
+			struct PS_INPUT {
+				float4 pos : SV_POSITION;
+			};
+			PS_INPUT main(VS_INPUT input) {
+				PS_INPUT output;
+				output.pos = float4(input.pos, 0.0, 1.0);
+				return output;
+			}
+		)";
+		ComPtr<ID3DBlob> vshaderBlob{};
+		if (FAILED(D3DCompile(VShaderSrc, strlen(VShaderSrc), nullptr, nullptr, nullptr, "main", "vs_5_0", CompileFlags, 0, vshaderBlob.ReleaseAndGetAddressOf(), nullptr)))
+			return false;
+    	device->CreateVertexShader(vshaderBlob->GetBufferPointer(), vshaderBlob->GetBufferSize(), nullptr, m_visibilityMaskState.vertexShader.ReleaseAndGetAddressOf());
+
+		static constexpr const std::array<D3D11_INPUT_ELEMENT_DESC,1> Vertexlayout = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};		
+		if (FAILED(device->CreateInputLayout(
+			Vertexlayout.data(), (UINT)Vertexlayout.size(),
+			vshaderBlob->GetBufferPointer(), vshaderBlob->GetBufferSize(),
+			m_visibilityMaskState.vertexLayout.ReleaseAndGetAddressOf()))) {
+			return false;
+		}
+	}
+	assert(m_visibilityMaskState.vertexLayout != nullptr);
+
+	if (m_visibilityMaskState.pixelShader == nullptr) {
+		// output doesn't matter, only writing to the stencil buffer
+		static constexpr const char* const PShaderSrc  = R"(
+			float4 main() : SV_TARGET {
+				return float4(1.0, 1.0, 1.0, 1.0);
+			}
+		)";
+		ComPtr<ID3DBlob> shaderBlob{};
+		if (FAILED(D3DCompile(PShaderSrc, strlen(PShaderSrc), nullptr, nullptr, nullptr, "main", "ps_5_0", CompileFlags, 0, shaderBlob.ReleaseAndGetAddressOf(), nullptr)))
+			return false;
+    	device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, m_visibilityMaskState.pixelShader.ReleaseAndGetAddressOf());
+	}
+
+	if (m_visibilityMaskState.noCullState == nullptr) {
+		D3D11_RASTERIZER_DESC rasterizerDesc = {};
+		rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+		rasterizerDesc.CullMode = D3D11_CULL_NONE;
+		rasterizerDesc.FrontCounterClockwise = FALSE;
+		device->CreateRasterizerState(&rasterizerDesc, m_visibilityMaskState.noCullState.ReleaseAndGetAddressOf());
+	}
+
+	if (m_visibilityMaskState.noBlendState == nullptr) {
+		D3D11_BLEND_DESC blendDesc = {};
+		memset(&blendDesc, 0, sizeof(D3D11_BLEND_DESC));
+		blendDesc.RenderTarget[0].BlendEnable = FALSE;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;  // Allow writing all color channels
+		device->CreateBlendState(&blendDesc, m_visibilityMaskState.noBlendState.ReleaseAndGetAddressOf());
+	}
+
+	if (m_visibilityMaskState.fillStencilState == nullptr) {
+		D3D11_DEPTH_STENCIL_DESC stencilDesc = {};
+		stencilDesc.DepthEnable = FALSE;
+		stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		stencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+		stencilDesc.StencilEnable = TRUE;
+		stencilDesc.StencilReadMask = 0xFF;  // Allow reading from all stencil bits
+		stencilDesc.StencilWriteMask = 0xFF; // Allow writing to all stencil bits
+		stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_REPLACE;   // Replace stencil value if stencil test fails
+		stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_REPLACE; // Replace stencil value if depth test fails (depth test disabled)
+		stencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;   // Replace stencil value if stencil test passes
+		stencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;      // Always pass stencil test (fill buffer)
+		stencilDesc.BackFace = stencilDesc.FrontFace;
+		device->CreateDepthStencilState(&stencilDesc, m_visibilityMaskState.fillStencilState.ReleaseAndGetAddressOf());
+	}
+
+	if (m_visibilityMaskState.testStencilState == nullptr) {
+		D3D11_DEPTH_STENCIL_DESC stencilDesc = {};
+		stencilDesc.DepthEnable = TRUE;
+		stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		stencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		stencilDesc.StencilEnable = TRUE;
+		stencilDesc.StencilReadMask = 0xFF;  // Allow reading from all stencil bits
+		stencilDesc.StencilWriteMask = 0x00; // No writing to stencil buffer (read-only)
+		stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;   // Keep stencil value if stencil test fails
+		stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // Keep stencil value if depth test fails
+		stencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;   // Keep stencil value if both tests pass
+		stencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;    // Only pass if stencil value equals reference
+		stencilDesc.BackFace = stencilDesc.FrontFace;
+		device->CreateDepthStencilState(&stencilDesc, m_visibilityMaskState.testStencilState.ReleaseAndGetAddressOf());
+	}
+
+	for (size_t vbIdx = 0; vbIdx < hams.size(); ++vbIdx) {
+		const auto& ham = hams[vbIdx];
+		auto& buff = m_visibilityMaskState.vertexBuffers[vbIdx];
+		D3D11_BUFFER_DESC bufferDesc = {};
+		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc.ByteWidth = static_cast<UINT>(sizeof(vr::HmdVector2_t) * ham.size());
+		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		D3D11_SUBRESOURCE_DATA initData = {};
+		initData.pSysMem = ham.data();
+		if (FAILED(device->CreateBuffer(&bufferDesc, &initData, buff.vb.ReleaseAndGetAddressOf()))) {
+			return false;
+		}
+		buff.vertexCount = ham.size();
+	}
+	return m_visibilityMaskState.isDirty = true;
 }

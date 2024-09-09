@@ -53,6 +53,11 @@
 
 		void InsertIDR();
 
+		typedef std::vector<vr::HmdVector2_t> HiddenAreaMesh;
+		typedef std::array<HiddenAreaMesh, 2> HiddenAreaMeshViews;
+		// projected triangles in NDC space.
+		bool SetVisibilityMasks(const HiddenAreaMeshViews& hams);
+
 	private:
 		CThreadEvent m_newFrameReady, m_encodeFinished;
 		std::shared_ptr<VideoEncoder> m_videoEncoder;

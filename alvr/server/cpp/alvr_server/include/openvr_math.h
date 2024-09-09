@@ -297,5 +297,55 @@ namespace vrmath {
 		result.m[2][3] = a.m[2][3];
 		return result;
 	}
-}
 
+	inline vr::HmdVector4_t matMul44(const vr::HmdVector4_t& a, const vr::HmdMatrix44_t& b)
+	{
+		vr::HmdVector4_t result {{0, 0, 0, 0}};
+		for (unsigned i = 0; i < 4; ++i) {
+			for (unsigned k = 0; k < 4; ++k) {
+				result.v[i] += a.v[k] * b.m[i][k];
+			}
+		}
+		return result;
+	}
+
+	inline void makeProjection(float fLeft, float fRight, float fTop, float fBottom, float zNear, float zFar, vr::HmdMatrix44_t &pmProj )
+	{
+		const float idx = 1.0f / (fRight - fLeft);
+		const float idy = 1.0f / (fBottom - fTop);
+		const float idz = 1.0f / (zNear - zFar);
+		const float sx = fRight + fLeft;
+		const float sy = fBottom + fTop;
+
+		auto& p = pmProj.m;
+		p[0][0] = 2.f * idx;    p[0][1] = 0.f;          p[0][2] = sx * idx;              p[0][3] = 0.f;
+		p[1][0] = 0.f;          p[1][1] = 2.f * idy;    p[1][2] = sy * idy;              p[1][3] = 0.f;
+		p[2][0] = 0.f;          p[2][1] = 0.f;          p[2][2] = (zFar + zNear) * idz;  p[2][3] = 2.f * zFar * zNear * idz;
+		p[3][0] = 0.f;          p[3][1] = 0.f;          p[3][2] = -1.0f;                 p[3][3] = 0.f;
+
+		// auto& = pmProj.m;
+		// p[0][0] = 2*idx; p[0][1] = 0;     p[0][2] = sx*idx;    p[0][3] = 0;
+		// p[1][0] = 0;     p[1][1] = 2*idy; p[1][2] = sy*idy;    p[1][3] = 0;
+		// p[2][0] = 0;     p[2][1] = 0;     p[2][2] = -zFar*idz; p[2][3] = -zFar*zNear*idz;
+		// p[3][0] = 0;     p[3][1] = 0;     p[3][2] = -1.0f;     p[3][3] = 0;
+	}
+
+	inline void makeProjection(const vr::HmdRect2_t &eye, float zNear, float zFar, vr::HmdMatrix44_t &pmProj )
+	{
+		makeProjection(
+			eye.vTopLeft.v[0], eye.vBottomRight.v[0],
+			eye.vTopLeft.v[1], eye.vBottomRight.v[1],
+			zNear, zFar, pmProj
+		);
+	}
+
+	inline vr::HmdVector3_t project(const vr::HmdMatrix44_t& proj_mat, const vr::HmdVector4_t& p) {
+		const vr::HmdVector4_t ndcP = vrmath::matMul44(p, proj_mat);
+		const float pd = 1.f / ndcP.v[3];
+		return {{
+			ndcP.v[0] * pd,
+			ndcP.v[1] * pd,
+			ndcP.v[2] * pd
+		}};
+	}
+}

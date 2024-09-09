@@ -73,11 +73,24 @@ pub enum ServerControlPacket {
     ReservedBuffer(Vec<u8>),
 }
 
+// VisibilityMask following OpenXR conventions,
+// specifically XR_VISIBILITY_MASK_TYPE_HIDDEN_TRIANGLE_MESH_KHR,
+// requires a projection matrix for rendering:
+//    "...mask coordinates in the z=-1 plane of the rendered view—​i.e. one meter in front of the view.
+//        When rendering the mask for use in a projection layer,
+//        these vertices must be transformed by the application’s projection matrix..."
+#[derive(Serialize, Deserialize, Clone)]
+pub struct HiddenAreaMesh {
+    pub vertices: Vec<Vec2>,
+    pub indices: Vec<u32>,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ViewsConfig {
     // Note: the head-to-eye transform is always a translation along the x axis
     pub ipd_m: f32,
     pub fov: [Fov; 2],
+    pub hidden_area_meshes: [HiddenAreaMesh; 2],
 }
 
 #[derive(Serialize, Deserialize, Clone)]

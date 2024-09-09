@@ -7,8 +7,8 @@ mod audio;
 use alvr_common::{prelude::*, ALVR_VERSION, HEAD_ID, LEFT_HAND_ID, RIGHT_HAND_ID};
 use alvr_session::Fov;
 use alvr_sockets::{
-    BatteryPacket, HeadsetInfoPacket, Input, LegacyController, LegacyInput, MotionData,
-    TimeSyncPacket, ViewsConfig,
+    BatteryPacket, HeadsetInfoPacket, HiddenAreaMesh, Input, LegacyController, LegacyInput,
+    MotionData, TimeSyncPacket, ViewsConfig,
 };
 pub use alxr_engine_sys::*;
 use lazy_static::lazy_static;
@@ -120,6 +120,10 @@ pub struct Options {
     /// Sets the initial passthrough mode, default is None (no passthrough blending)
     #[structopt(long, parse(from_str))]
     pub passthrough_mode: Option<ALXRPassthroughMode>,
+
+    /// Disables all usages of visibility masks
+    #[structopt(/*short,*/ long = "disable-visibility-masks")]
+    pub no_visibility_masks: bool,
 }
 
 impl Options {
@@ -167,6 +171,7 @@ impl Options {
             tracking_server_port_no: ALXR_TRACKING_SERVER_PORT_NO,
             simulate_headless: false,
             passthrough_mode: Some(ALXRPassthroughMode::None),
+            no_visibility_masks: false,
         };
 
         let sys_properties = AndroidSystemProperties::new();
@@ -326,6 +331,16 @@ impl Options {
             );
         }
 
+        let property_name = "debug.alxr.no_visibility_masks";
+        if let Some(value) = sys_properties.get(&property_name) {
+            new_options.no_visibility_masks = std::str::FromStr::from_str(value.as_str())
+                .unwrap_or(new_options.no_visibility_masks);
+            println!(
+                "ALXR System Property: {property_name}, input: {value}, parsed-result: {}",
+                new_options.no_visibility_masks
+            );
+        }
+
         new_options
     }
 }
@@ -356,6 +371,7 @@ impl Options {
             tracking_server_port_no: ALXR_TRACKING_SERVER_PORT_NO,
             simulate_headless: false,
             passthrough_mode: Some(ALXRPassthroughMode::None),
+            no_visibility_masks: false,
         };
         new_options
     }
@@ -587,9 +603,46 @@ pub extern "C" fn input_send(data_ptr: *const TrackingInfo) {
     }
 }
 
-pub extern "C" fn views_config_send(eye_info_ptr: *const ALXREyeInfo) {
-    let eye_info: &ALXREyeInfo = unsafe { &*eye_info_ptr };
-    let fov = &eye_info.eyeFov;
+#[inline(always)]
+fn make_hidden_area_meshes(view_config: &ALXRViewConfig) -> [HiddenAreaMesh; 2] {
+    let empty_ham = HiddenAreaMesh {
+        vertices: Vec::new(),
+        indices: Vec::new(),
+    };
+    let mut hams = [empty_ham.clone(), empty_ham];
+    for view_idx in 0..hams.len() {
+        let src_ham = &view_config.hidden_area_meshes[view_idx];
+        if src_ham.vertices.is_null()
+            || src_ham.indices.is_null()
+            || src_ham.vertexCount == 0
+            || src_ham.indexCount == 0
+        {
+            return hams; // both empty.
+        }
+    }
+    for view_idx in 0..hams.len() {
+        let src_ham = &view_config.hidden_area_meshes[view_idx];
+        unsafe {
+            let verts_slice =
+                std::slice::from_raw_parts(src_ham.vertices, src_ham.vertexCount as _);
+            let indxs_slice = std::slice::from_raw_parts(src_ham.indices, src_ham.indexCount as _);
+            let mut verts = Vec::with_capacity(verts_slice.len());
+            for vert in verts_slice {
+                verts.push(Vec2::new(vert.x, vert.y));
+            }
+            hams[view_idx] = HiddenAreaMesh {
+                vertices: verts,
+                indices: indxs_slice.to_vec(),
+            }
+        }
+    }
+    return hams;
+}
+
+pub extern "C" fn views_config_send(view_config_ptr: *const ALXRViewConfig) {
+    let view_config: &ALXRViewConfig = unsafe { &*view_config_ptr };
+    let eye_info = &view_config.eyeInfo;
+    let fov = &view_config.eyeInfo.eyeFov;
     if let Some(sender) = &*VIEWS_CONFIG_SENDER.lock() {
         sender
             .send(ViewsConfig {
@@ -598,16 +651,17 @@ pub extern "C" fn views_config_send(eye_info_ptr: *const ALXREyeInfo) {
                     Fov {
                         left: fov[0].left,
                         right: fov[0].right,
-                        top: -fov[0].bottom,
-                        bottom: -fov[0].top,
+                        top: fov[0].top,
+                        bottom: fov[0].bottom,
                     },
                     Fov {
                         left: fov[1].left,
                         right: fov[1].right,
-                        top: -fov[1].bottom,
-                        bottom: -fov[1].top,
+                        top: fov[1].top,
+                        bottom: fov[1].bottom,
                     },
                 ],
+                hidden_area_meshes: make_hidden_area_meshes(&view_config),
             })
             .ok();
     }

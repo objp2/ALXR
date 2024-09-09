@@ -248,9 +248,9 @@ void SetOpenvrProperty(unsigned long long top_level_path, OpenvrProperty prop) {
     }
 }
 
-void SetViewsConfig(ViewsConfigData config) {
+void SetViewsConfig(const ViewsConfigData *config) {
     if (g_driver_provider.hmd) {
-        g_driver_provider.hmd->SetViewsConfig(config);
+        g_driver_provider.hmd->SetViewsConfig(*config);
     }
 }
 

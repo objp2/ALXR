@@ -127,3 +127,13 @@
 		void CEncoder::InsertIDR() {
 			m_scheduler.InsertIDR();
 		}
+
+		// projected triangles in NDC space
+		bool CEncoder::SetVisibilityMasks(const CEncoder::HiddenAreaMeshViews& hams) {
+			if (hams[0].empty() || hams[1].empty())
+				return false;
+			auto frameRender = m_FrameRender;
+			if (frameRender == nullptr)
+				return false;
+			return frameRender->SetVisibilityMasks(hams);
+		}
