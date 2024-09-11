@@ -19,6 +19,8 @@ class CEncoder : public CThread {
     void Stop();
     void OnPacketLoss();
     void InsertIDR();
+    template < typename HiddenAreaMeshViewsT >
+		bool SetVisibilityMasks(const HiddenAreaMeshViewsT&) { return false; }
 
   private:
     void GetFds(int client, int (*fds)[6]);

@@ -421,9 +421,6 @@ void OvrHmd::StartStreaming() {
 void OvrHmd::SetViewsConfig(const ViewsConfigData &config) {
     this->views_config = config;
 
-    const float viewportWidth = Settings::Instance().m_renderWidth / 2;
-    const float viewportHeight = Settings::Instance().m_renderHeight;
-    
     const std::array<vr::HmdRect2_t,2> view_projs = {
         fov_to_projection(config.fov[0]),
         fov_to_projection(config.fov[1])
