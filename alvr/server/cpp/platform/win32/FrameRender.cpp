@@ -515,12 +515,12 @@ void FrameRender::RenderVisibilityMaskNoLock() {
 		m_visibilityMaskState.vertexShader == nullptr)
 		return;
 
-    deviceCtx->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_STENCIL, 1.0f, 0);
     deviceCtx->OMSetDepthStencilState(m_visibilityMaskState.fillStencilState.Get(), 1);  // Use stencil ref = 1
 	const float blendFactor[4] = {0, 0, 0, 0};
 	constexpr const UINT sampleMask = 0xFFFFFFFF;
 	deviceCtx->OMSetBlendState(m_visibilityMaskState.noBlendState.Get(), blendFactor, sampleMask);
 	deviceCtx->RSSetState(m_visibilityMaskState.noCullState.Get());
+	deviceCtx->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	deviceCtx->VSSetShader(m_visibilityMaskState.vertexShader.Get(), nullptr, 0);
 	deviceCtx->PSSetShader(m_visibilityMaskState.pixelShader.Get(), nullptr, 0);
@@ -546,7 +546,7 @@ void FrameRender::RenderVisibilityMaskNoLock() {
 		deviceCtx->Draw(vbuff.vertexCount, 0);
 	}
 
-	// Reset viewport back
+	// Reset state
 	D3D11_VIEWPORT viewport = {};
 	viewport.Width = (float)Settings::Instance().m_renderWidth;
 	viewport.Height = (float)Settings::Instance().m_renderHeight;
@@ -555,6 +555,8 @@ void FrameRender::RenderVisibilityMaskNoLock() {
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	m_pD3DRender->GetContext()->RSSetViewports(1, &viewport);
+
+	deviceCtx->RSSetState(m_visibilityMaskState.cullState.Get());
 
 	m_visibilityMaskState.isDirty = false;
 }
@@ -612,7 +614,7 @@ bool FrameRender::SetVisibilityMasks(const FrameRender::HiddenAreaMeshViews& ham
 		// output doesn't matter, only writing to the stencil buffer
 		static constexpr const char* const PShaderSrc  = R"(
 			float4 main() : SV_TARGET {
-				return float4(1.0, 1.0, 1.0, 1.0);
+				return float4(0.0, 0.0, 0.0, 0.0);
 			}
 		)";
 		ComPtr<ID3DBlob> shaderBlob{};
@@ -621,19 +623,25 @@ bool FrameRender::SetVisibilityMasks(const FrameRender::HiddenAreaMeshViews& ham
     	device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, m_visibilityMaskState.pixelShader.ReleaseAndGetAddressOf());
 	}
 
+	if (m_visibilityMaskState.cullState == nullptr) {
+		const CD3D11_RASTERIZER_DESC rasterizerDesc{ D3D11_DEFAULT };
+		assert(rasterizerDesc.CullMode == D3D11_CULL_BACK);
+		device->CreateRasterizerState(&rasterizerDesc, m_visibilityMaskState.cullState.ReleaseAndGetAddressOf());
+	}
+
 	if (m_visibilityMaskState.noCullState == nullptr) {
-		D3D11_RASTERIZER_DESC rasterizerDesc = {};
+		CD3D11_RASTERIZER_DESC rasterizerDesc{ D3D11_DEFAULT };
 		rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		rasterizerDesc.FrontCounterClockwise = FALSE;
 		device->CreateRasterizerState(&rasterizerDesc, m_visibilityMaskState.noCullState.ReleaseAndGetAddressOf());
 	}
 
 	if (m_visibilityMaskState.noBlendState == nullptr) {
-		D3D11_BLEND_DESC blendDesc = {};
-		memset(&blendDesc, 0, sizeof(D3D11_BLEND_DESC));
-		blendDesc.RenderTarget[0].BlendEnable = FALSE;
-		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;  // Allow writing all color channels
+		CD3D11_BLEND_DESC blendDesc{ D3D11_DEFAULT };
+		for (size_t idx = 0; idx < 8; ++idx) {
+			blendDesc.RenderTarget[idx].BlendEnable = FALSE;
+			blendDesc.RenderTarget[idx].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // Allow writing all color channels
+		}
 		device->CreateBlendState(&blendDesc, m_visibilityMaskState.noBlendState.ReleaseAndGetAddressOf());
 	}
 
@@ -645,8 +653,8 @@ bool FrameRender::SetVisibilityMasks(const FrameRender::HiddenAreaMeshViews& ham
 		stencilDesc.StencilEnable = TRUE;
 		stencilDesc.StencilReadMask = 0xFF;  // Allow reading from all stencil bits
 		stencilDesc.StencilWriteMask = 0xFF; // Allow writing to all stencil bits
-		stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_REPLACE;   // Replace stencil value if stencil test fails
-		stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_REPLACE; // Replace stencil value if depth test fails (depth test disabled)
+		stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;   // Replace stencil value if stencil test fails
+		stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // Replace stencil value if depth test fails (depth test disabled)
 		stencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;   // Replace stencil value if stencil test passes
 		stencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;      // Always pass stencil test (fill buffer)
 		stencilDesc.BackFace = stencilDesc.FrontFace;

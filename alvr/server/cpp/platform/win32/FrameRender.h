@@ -111,6 +111,7 @@ private:
 		ComPtr<ID3D11DepthStencilState> fillStencilState{};
 		ComPtr<ID3D11DepthStencilState> testStencilState{};
 		ComPtr<ID3D11BlendState> noBlendState{};
+		ComPtr<ID3D11RasterizerState> cullState{};
 		ComPtr<ID3D11RasterizerState> noCullState{};
 		bool isDirty{false};
 	} m_visibilityMaskState{};
