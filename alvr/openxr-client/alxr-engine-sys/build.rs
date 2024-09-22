@@ -179,7 +179,10 @@ fn main() {
             "DISABLE_DECODER_SUPPORT",
             cmake_option_from_feature(&DISABLE_DECODER_FEATURE),
         );
-    if profile == "release" && cmake_generator == "Ninja" {
+    if profile == "release"
+        && cmake_generator == "Ninja"
+        && target_triple.vendor != target_lexicon::Vendor::Uwp
+    {
         config.build_target("install/strip");
     }
 
