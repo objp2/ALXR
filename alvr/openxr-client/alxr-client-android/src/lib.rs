@@ -213,6 +213,20 @@ unsafe fn run(android_app: &AndroidApp) -> Result<(), Box<dyn std::error::Error>
     let no_linearize_srgb = APP_CONFIG.no_linearize_srgb || is_device("Lynx", &vm);
     log::info!("alxr-client: Disable shader gamma/sRGB linearization? {no_linearize_srgb}");
 
+    let mut eye_tracking_type = APP_CONFIG.eye_tracking.unwrap_or(ALXREyeTrackingType::Auto);
+    // quest firmware version 71.0.0.178.498 has a crash bug in `xrSyncActions` when
+    // `XR_EXT_eye_gaze_interaction` extension is enabled.
+    match eye_tracking_type {
+        ALXREyeTrackingType::Auto | ALXREyeTrackingType::ExtEyeGazeInteraction => {
+            let build_id = get_build_property(&vm, "ID");
+            if build_id == "SQ3A.220605.009.A1" {
+                log::debug!("alxr-client: override eye-tracking type workaround enabled.");
+                eye_tracking_type = ALXREyeTrackingType::FBEyeTrackingSocial;
+            }
+        }
+        _ => {}
+    };
+
     let ctx = ALXRClientCtx {
         graphicsApi: APP_CONFIG.graphics_api.unwrap_or(ALXRGraphicsApi::Auto),
         decoderType: ALXRDecoderType::NVDEC, // Not used on android.
@@ -241,7 +255,7 @@ unsafe fn run(android_app: &AndroidApp) -> Result<(), Box<dyn std::error::Error>
         facialTracking: APP_CONFIG
             .facial_tracking
             .unwrap_or(ALXRFacialExpressionType::Auto),
-        eyeTracking: APP_CONFIG.eye_tracking.unwrap_or(ALXREyeTrackingType::Auto),
+        eyeTracking: eye_tracking_type,
         firmwareVersion: get_firmware_version(&vm),
         trackingServerPortNo: APP_CONFIG.tracking_server_port_no,
         simulateHeadless: APP_CONFIG.simulate_headless,
