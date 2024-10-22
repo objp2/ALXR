@@ -179,14 +179,12 @@ fn main() {
             "DISABLE_DECODER_SUPPORT",
             cmake_option_from_feature(&DISABLE_DECODER_FEATURE),
         );
-    if profile == "release"
-        && cmake_generator == "Ninja"
-        && target_triple.vendor != target_lexicon::Vendor::Uwp
-    {
-        config.build_target("install/strip");
-    }
 
     let alxr_engine_output_dir = if is_android_env(&target_triple) {
+        if profile == "release" && cmake_generator == "Ninja" {
+            config.build_target("install/strip");
+        }
+
         let product_flavor = get_product_flavour();
         println!("selected product flavor: {0}", product_flavor);
         match product_flavor {
