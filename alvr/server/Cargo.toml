@@ -1,6 +1,6 @@
 [package]
 name = "alvr_server"
-version = "18.16.1"
+version = "18.17.0"
 authors = ["alvr-org", "polygraphene", "Valve Corporation"]
 license = "MIT"
 edition = "2021"
@@ -56,14 +56,14 @@ reqwest = "0.11"
 tokio-tungstenite = "0.24"
 tokio-util = { version = "0.7", features = ["codec"] }
 # Graphics
-wgpu = "22"
+wgpu = "23"
 winit = "0.26" # needed to get the screen size
 # Browser interop
 tempfile = "3"
 alcro = "0.5.4"
 webbrowser = "1" # this is just for opening links in the default browser
 # Miscellaneous
-fern = "0.6"
+fern = "0.7"
 
 [build-dependencies]
 alvr_filesystem = { path = "../filesystem" }
