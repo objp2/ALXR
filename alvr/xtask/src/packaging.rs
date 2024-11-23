@@ -123,7 +123,7 @@ pub fn publish_server(is_nightly: bool, root: Option<String>, reproducible: bool
         licenses_dir.join("ALVR.txt"),
     )
     .unwrap();
-    command::run("cargo install cargo-about").unwrap();
+    command::run("cargo install cargo-about --version 0.6.4").unwrap();
     command::run_in(
         &afs::workspace_dir().join("alvr/server"),
         &format!(
